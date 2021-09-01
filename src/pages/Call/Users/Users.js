@@ -4,7 +4,14 @@ import styles from './Users.less'
 import baseStyles from '../assets/base.less'
 import Box from '../Box/Box'
 import { Input, Checkbox, Avatar, Icon } from 'antd';
+import {queryUsers} from '../services'
 
+
+queryUsers({usernumber:'10010006'}).then(res => {
+	console.log(res)
+}).catch(err => {
+	console.log(err)
+})
 const Users = (props) => {
 	let {height, width = 360} = props
 	let list = [

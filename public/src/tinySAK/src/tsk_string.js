@@ -3,7 +3,6 @@
 * License: BSD
 * This file is part of Open Source sipML5 solution <http://www.sipml5.org>
 */
-console.log(11111,11113)
 function tsk_string_is_null_or_empty(s_str) {
     return !s_str || s_str == "";
 }

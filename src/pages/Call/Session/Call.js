@@ -3,8 +3,6 @@ import iconfont from '../assets/iconfont.less'
 import styles from './Call.less';
 import baseStyles from '../assets/base.less'
 import { Row, Col, Icon } from 'antd';
-// import SIPml from '../sipJs/SIPml.js'
-
 
 const users = [
 	{name: '编号123', id: 1, status: 1},
@@ -71,19 +69,31 @@ export default class extends Component {
 	state = {
 		audioRemote: null,
 		oSipStack: null,
+		oSipSessionRegister: null,
+		oSipSessionCall: null,
+		oConfigCall: {
+			bandwidth: { audio: undefined, video: undefined },
+			events_listener: { events: '*', listener: (e) => {
+				this.onSipEventSession(e)
+			}},
+			sip_caps: [
+				{ name: '+g.oma.sip-im' },
+        { name: 'language', value: '\"en,fr\"' }
+			]
+		},
 		loginConfig: {
 			display_name: '10010006',
 			enable_early_ims: true,
 			enable_media_stream_cache: false,
 			enable_rtcweb_breaker: true,
 			events_listener: { events: '*', listener: (e) => {
-				console.log(this, e)
+				this.onSipEventStack(e)
 			} },
 			ice_servers: "[]",
-			impi: "10010006",
-			impu: "sip:10010006@kinet",
+			impi: "10010023",
+			impu: "sip:10010023@kinet",
 			outbound_proxy_url: "",
-			password: "103537",
+			password: "309311",
 			realm: "kinet",
 			sip_headers: [
 				{ name: 'User-Agent', value: 'IM-client/OMA1.0 sipML5-v1.2016.03.04' },
@@ -94,7 +104,77 @@ export default class extends Component {
 	}
 
 	onSipEventStack (e) {
-		console.log(e, 111)
+		console.log(e.type, 111)
+		switch (e.type) {
+			case 'started':
+				{
+					try {
+						this.setState({
+							oSipSessionRegister: this.state.oSipStack.newSession('register',{
+								expires: 200,
+								events_listener: { events: '*', listener: (e) => {
+									this.onSipEventSession(e)
+								} },
+								sip_caps: [
+														{ name: '+g.oma.sip-im', value: null },
+														//{ name: '+sip.ice' }, // rfc5768: FIXME doesn't work with Polycom TelePresence
+														{ name: '+audio', value: null },
+														{ name: 'language', value: '\"en,fr\"' }
+								]
+							})
+						})
+						this.state.oSipSessionRegister.register();
+					}
+					catch (e) {
+
+					}
+					break;
+				}
+				default: break;
+		}
+	}
+
+	// 会话的回调
+	onSipEventSession (e) {
+		console.log(e,222)
+		const {type, session} = e
+		switch (type) {
+			case 'connecting': case 'connected': 
+			{
+				let bConnected = (type == 'connected');
+				if (session == this.state.oSipSessionRegister) {
+					// 模拟拨号
+					this.sipCall()
+
+				} else if (session == this.state.oSipSessionCall) {
+
+				}
+			}
+		}
+	}
+
+	// 开始拨号
+	sipCall () {
+		if (this.state.oSipStack && !this.state.oSipSessionCall && !tsk_string_is_null_or_empty('10010007')) {
+			this.setState({
+				oSipSessionCall: this.state.oSipStack.newSession('call-audio', this.state.oConfigCall)
+			})
+
+			if (this.state.oSipSessionCall.call('10010007') != 0) {
+				console.log('拨号失败...')
+				this.setState({
+					oSipSessionCall: null
+				})
+			}
+		}
+	}
+
+	componentDidMount () {
+		let audioRemote = document.getElementById('audio_remote')
+		this.setState({
+			audioRemote,
+			oConfigCall: {...this.state.oConfigCall, audio_remote: audioRemote}
+		})
 	}
 
 	render () {
@@ -103,12 +183,13 @@ export default class extends Component {
 
 		// loadTiny()
 		setTimeout(() => {
-			this.setState({
-				oSipStack: new SIPml.Stack(loginConfig)
-			})
-			let startRes = this.state.oSipStack.start()
-			console.log(this.state.oSipStack, startRes, 123)
-    }, 2000)
+			if (!this.state.oSipStack) {
+				this.setState({
+					oSipStack: new SIPml.Stack(loginConfig)
+				})
+				let startRes = this.state.oSipStack.start()
+			}
+    }, 1000)
 
 		return (
 			<div className={`${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
@@ -116,7 +197,7 @@ export default class extends Component {
 					>
 				<div className={styles.top}></div>
 				<h2 className={styles.title}>语音通话</h2>
-
+				<audio id="audio_remote" autoPlay></audio>
 				<div className={`${baseStyles.h100} ${baseStyles['direction-col']} ${baseStyles['flex']} ${baseStyles['justify-center']}`}
 				>
 					{SelectedUers}

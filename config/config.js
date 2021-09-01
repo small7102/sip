@@ -43,6 +43,13 @@ export default {
   externals: {
     '@antv/data-set': 'DataSet',
   },
+  // proxy: {
+  //   '/api/': {
+  //     target: 'http://47.102.143.50',
+  //     changeOrigin: true,
+  //     pathRewrite: {'^/api': ''}
+  //   }
+  // },
   ignoreMomentLocale: true,
   lessLoaderOptions: {
     javascriptEnabled: true,
