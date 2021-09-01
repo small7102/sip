@@ -1,0 +1,39 @@
+.scroll-bar {
+  overflow-y: scroll !important;
+}
+.scroll-bar::-webkit-scrollbar {
+  width: 6px;
+  height: 4px;
+}
+.scroll-bar::-webkit-scrollbar-button {
+  display: none;
+}
+.scroll-bar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0);
+}
+.scroll-bar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+.flex {
+  display: flex;
+}
+.flex-item {
+  flex: 1;
+}
+.direction-col {
+  flex-direction: column;
+}
+.align-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.ft12 {
+  font-size: 12px;
+}
+.m-box-border {
+  border: 1px solid #7f89e2;
+}
+/*# sourceMappingURL=./base.css.map */
