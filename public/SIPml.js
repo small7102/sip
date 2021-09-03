@@ -343,7 +343,10 @@ Checks whether the engine is initialized or not. To initialize the stack you mus
 @static
 @returns {Boolean} <i>true</i> if the engine is initialized; otherwise <i>false</i>
 */
-SIPml.isInitialized = function () { return SIPml.b_initialized; }
+SIPml.isInitialized = function () { 
+    console.log('是否初始化', SIPml.b_initialized)
+    return SIPml.b_initialized; 
+}
 
 
 /**
@@ -1181,6 +1184,7 @@ SIPml.Stack.prototype.setConfiguration = function (o_conf) {
                      tsip_stack.prototype.SetBandwidth(o_bandwidth),
                      tsip_stack.prototype.SetVideoSize(o_video_size));
 
+    console.log(o_conf.sip_headers,12121212)
     // add sip headers
     if (o_conf.sip_headers) {
         o_conf.sip_headers.forEach(function (o_header) {
@@ -1518,7 +1522,7 @@ SIPml.Session.prototype.accept = function (o_conf) {
 SIP session event object. You should never create an instance of this class by yourself.
 @constructor
 @extends SIPml.Event
-@param {SIPml.Session} [session] The session type would be <a href="SIPml.Session.Registration.html">SIPml.Session.Registration</a>, <a href="SIPml.Session.Call.html">SIPml.Session.Call</a> or <a href="SIPml.Session.Message.html">SIPml.Session.Message</a>.
+@param {SIPml.Session} [session] The sessionC type would be <a href="SIPml.Session.Registration.html">SIPml.Session.Registration</a>, <a href="SIPml.Session.Call.html">SIPml.Session.Call</a> or <a href="SIPml.Session.Message.html">SIPml.Session.Message</a>.
 @param {String} type The event type or identifier. Please check <a href="SIPml.EventTarget.html#SIPml.EventTarget.Session">this link</a> for more information about all supported session event types.
 @param {tsip_event} [event] Private wrapped session object.
 @property {SIPml.Session} session Session associated to this event. Would be <a href="SIPml.Session.Registration.html">SIPml.Session.Registration</a>, <a href="SIPml.Session.Call.html">SIPml.Session.Call</a> or <a href="SIPml.Session.Message.html">SIPml.Session.Message</a>.
@@ -1665,15 +1669,24 @@ session.call('johndoe', {
 @throws {ERR_INVALID_PARAMETER_VALUE | ERR_NOT_READY} <font color="red">ERR_INVALID_PARAMETER_VALUE</font> | <font color="red">ERR_NOT_READY</font>
 */
 SIPml.Session.Call.prototype.call = function (s_to, o_conf) {
+
     if (tsk_string_is_null_or_empty(s_to)) {
         throw new Error("ERR_INVALID_PARAMETER_VALUE: 'to' must not be null");
     }
     if (!SIPml.haveMediaStream()) {
         throw new Error("ERR_NOT_READY: Media engine not ready yet");
     }
-    // set destination
+    
     this.o_session.set(tsip_session.prototype.SetToStr(s_to));
     // set conf
+    // console.log(tsip_session.prototype.SetToStr(s_to), 78978)
+    if (o_conf && o_conf.members) {
+        o_conf.sip_headers = o_conf.sip_headers || []
+        o_conf.sip_headers.push({
+            name: 'Call-Info',
+            value: `members=${o_conf.members}`
+        })
+    }
     this.setConfiguration(o_conf);
     // make call
     return this.o_session.call(this.mediaType);
