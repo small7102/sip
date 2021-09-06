@@ -7,6 +7,10 @@ import { Input, Checkbox, Avatar, Icon } from 'antd';
 
 export default
 class Users extends Component {
+	constructor (props) {
+		super(props)
+		this.onSelectedUsersChange = this.onSelectedUsersChange.bind(this)
+	}
 	state = {
 		selectedUserIds: []
 	}
@@ -56,7 +60,6 @@ class Users extends Component {
 	
 	render () {
 		let {height, width = 360, users, loading, onlineIds} = this.props
-		console.log(users, loading)
 		return(
 			<Box
 				title="通讯录"
@@ -69,9 +72,7 @@ class Users extends Component {
 									style={{backgroundColor: 'rgba(255,255,255,.1) !important'}}
 						/>
 						<Checkbox.Group className={`${baseStyles['w100']}`}
-														onChange={(data)=> {
-															this.onSelectedUsersChange(data)
-														}}
+														onChange={this.onSelectedUsersChange}
 						>
 							<ul className={`${styles['list-wrap']} ${baseStyles['scroll-bar']}`} style={{height: `${height-100}px`}}>
 								{this.listDom(users, onlineIds)}

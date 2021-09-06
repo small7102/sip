@@ -5,20 +5,22 @@ import baseStyles from '../assets/base.less'
 import { Row, Col, Icon } from 'antd';
 const ringbacktoneSrc = require('../assets/sounds/ringbacktone.wav')
 const ringtoneSrc = require('../assets/sounds/ringtone.wav')
+import {byteToString, arrToObjectBySmyble} from '../utils'
+
 
 let oSipStack = null
 let oSipSessionRegister = null
 let oSipSessionCall = null
 
-let isCall = false
-let roomId = null
-
 export default class extends Component {
 
 	constructor (props) {
 		super(props)
+		this.sipCall = this.sipCall.bind(this)
+		this.stopPtt = this.stopPtt.bind(this)
 	}
 	state = {
+		sipAvalible: false,
 		audioRemote: null,
 		ringbackTone: null,
 		oSipStack: null,
@@ -34,15 +36,18 @@ export default class extends Component {
         { name: 'language', value: '\"en,fr\"' }
 			]
 		},
-		isCall: false,
+		connectedMemberObj: {},
+		ptting: false, // 正在ptt
+		calling: false, // 正在拨号
 		callConnected: false,
+		sessionId: null,
 		loginConfig: {
 			display_name: '10010022',
 			enable_early_ims: true,
 			enable_media_stream_cache: false,
 			enable_rtcweb_breaker: true,
 			events_listener: { events: '*', listener: (e) => {
-				this.onSipEventStack(e, isCall)
+				this.onSipEventStack(e)
 			} },
 			ice_servers: "[]",
 			impi: "10010022",
@@ -59,7 +64,7 @@ export default class extends Component {
 	}
 
 	onSipEventStack (e) {
-		console.log(e.type, 111)
+		// console.log(e.type, 111)
 		switch (e.type) {
 			case 'started':
 				{
@@ -90,8 +95,9 @@ export default class extends Component {
 	// 会话的回调
 	onSipEventSession (e) {
 		// let {oSipSessionRegister, oSipSessionCall} = this.state
+		let content = []
 		const {type, session} = e
-		console.log(e,222)
+		console.log(e)
 		switch (type) {
 			case 'connecting': {
 				break;
@@ -99,9 +105,9 @@ export default class extends Component {
 			case 'connected': 
 			{
 				let bConnected = (type == 'connected');
-				if (session == oSipSessionRegister) {
-					// 模拟拨号
-				this.sipCall()
+				if (session == oSipSessionRegister) { // 注册登录成功
+					this.setState({sipAvalible: true})
+					// console.log(this.state.sipAvalible,)
 
 				} else if (session == oSipSessionCall) {
 
@@ -113,8 +119,7 @@ export default class extends Component {
 				if (session == oSipSessionCall) {
 						let iSipResponseCode = e.getSipResponseCode();
 						if (iSipResponseCode == 180 || iSipResponseCode == 183) {
-								// startRingbackTone();
-								// txtCallStatus.innerHTML = '<i>Remote ringing...</i>';
+								this.setState({calling: true})
 						}
 				}
 				break;
@@ -127,15 +132,64 @@ export default class extends Component {
 				break;
 			}
 			case 'sent_request': {
-				this.setState({
-					callConnected: true
-				})
 				break;
 			}
 			case 'i_info': {
-				this.setState({
-					callConnected: true
-				})
+				if (session == oSipSessionCall) {
+					let content = !content && Array.isArray(e.content) && e.content.length && e.content
+					if (Array.isArray(content) && content.length) {
+
+						let info = byteToString(content)
+
+						let infoArr = info.split('\r\n')
+						let cbInfo = arrToObjectBySmyble(infoArr)
+						let {action, status, state} = cbInfo
+
+						console.log(cbInfo, action, 1254545)
+						if (state == 'add') {
+							// 有人加紧会话
+							const connectedMemberObj = {...this.state.connectedMemberObj}
+							connectedMemberObj[cbInfo.number] = cbInfo
+							
+							this.setState({callConnected: true, 
+														 calling: false, 
+														 connectedMemberObj
+														})
+						} else if (state == 'talking') {
+							// count: "2"
+							// level: "1"
+							// number: "10010023"
+							// pttid: "10010023"
+							// state: "talking
+						} else if (state == 'release') {
+							// count: "2"
+							// number: "10010023"
+							// state: "release"
+
+						} else if (state == 'del') {
+							// count: "1", state: "del", number: "10010023"
+						} 
+						else if (action == 'req') {
+							// 自己申请ptt
+							this.setState({ptting: status == 'ok' ? true : false})
+						} else if (action == 'rel' && status == 'ok') {
+							// 自己释放ptt
+							this.setState({ptting: false})
+						}
+					}
+				}
+				break;
+			}
+			case 'terminated': {
+				if (session == oSipSessionRegister) {
+
+					oSipSessionCall = null;
+					oSipSessionRegister = null;
+				}
+				else if (session == oSipSessionCall) {
+					oSipSessionCall = null;
+					this.setState({callConnected: false, calling: false})
+				}
 				break;
 			}
 		}
@@ -151,22 +205,12 @@ export default class extends Component {
 
 	// 开始拨号
 	sipCall () {
-		// if (!oSipStack) {
-			// if (!oSipStack) {
-			// 	isCall = true
-			// 	oSipStack = new SIPml.Stack(this.state.loginConfig)
-			// 	oSipStack.start()
-			// 	return
-			// }
-
-		// 	console.log(startRes, SIPml.b_initialized)
-		// }
-		// console.log(this, 77777)
+		// if (!this.state.sipAvalible) return // sip登录时代
 		// let {selectedUsers} = this.props
 		// if (!selectedUsers.length) return
 
 		if (this.state.callConnected && oSipSessionCall) {
-			oSipSessionCall.info(`action=req\r\nid=${roomId}level=1`,
+			let reqRes = oSipSessionCall.info(`action=req\r\nid=${this.state.sessionId}level=1`,
 				'application/poc_msg',
 				this.state.oConfigCall
 			)
@@ -174,43 +218,38 @@ export default class extends Component {
 		}
 		if (oSipStack && !oSipSessionCall && !tsk_string_is_null_or_empty('10010023')) {
 			oSipSessionCall = oSipStack.newSession('call-audio', this.state.oConfigCall)
-			// if (oSipSessionCall.call('10010023', this.state.oConfigCall) !=0) {
-			// 	console.log('拨号失败...')
-			// 	oSipSessionCall = null
-			// }
-			
-			roomId = this.randomRoom()
+
+			this.setState({sessionId: oSipSessionCall.o_session.i_id, calling: true})
+			console.log(this.state.sessionId, '会话id')
+	
+			let roomId = this.randomRoom()
 			let config = {...this.state.oConfigCall}
 			let tempGroup = oSipSessionCall.call(roomId, {
 				...config,
-				members: '10010007#10010023'
+				members: '10010023#10010007'
+				// members: selectedUsers.map(item=> item.usr_number).join('#')
 			})
 			if (tempGroup !=0) {
 				console.log('拨号失败...')
 				oSipSessionCall = null
+				this.setState({calling: false})
 			}
 				
-
-			// let callRes = null
-			// if (selectedUsers.length === 1) { // 单呼
-			// 	callRes = oSipSessionCall.call(selectedUsers[0].usr_number,this.state.oConfigCall)
-			// } else if (selectedUsers.length > -1) { // 临时群组
-			// 	let roomId = this.randomRoom()
-			// 	callRes = oSipSessionCall.call(roomId, {
-			// 		...this.state.oConfigCall,
-			// 			members: '10010007#10010023'
-			// 		})
-			// }
-			// if (callRes != 0) {
-			// 	console.log('拨号失败...')
-			// 	this.setState({
-			// 		oSipSessionCall: null
-			// 	})
-			// }
 		} else if (oSipSessionCall) {
 			console.log(oSipSessionCall)
 			// oSipSessionCall.accept(this.state.oConfigCall)
 		}
+	}
+
+	stopPtt () {
+		console.log('挂断')
+		let hanguoRes = oSipSessionCall.info(`action=rel\r\nid=${this.state.sessionId}level=1`,
+			'application/poc_msg',
+			this.state.oConfigCall
+		)
+
+		this.setState({ptting: false})
+		console.log(hanguoRes, '挂断结果')
 	}
 
 	componentDidMount () {
@@ -230,16 +269,13 @@ export default class extends Component {
 				oSipStack = new SIPml.Stack(loginConfig)
 				
 				let startRes = oSipStack.start()
-				console.log(startRes, SIPml.b_initialized)
-				create.addEventListener('click', () => {
-					this.sipCall()
-				})
 			}
-    }, 3000)
+    }, 2000)
 	}
 
 	selectedUsersDom () {
 		let {selectedUsers} = this.props
+		selectedUsers = selectedUsers || []
 		return (
 			selectedUsers.map(function (user) {
 				return (
@@ -267,24 +303,52 @@ export default class extends Component {
 
 	render () {
 		const { height } = this.props;
-		const { loginConfig } = this.state
+		const { loginConfig, callConnected, calling, ptting } = this.state
 
 		const createHandlers = () => {
 			return (<div className={`${styles.handlers} ${baseStyles['flex']} ${baseStyles['justify-center']} ${baseStyles['align-center']}`}>
 			 <div className={`${styles['handler-item']}`}>
-				 <div className={`${styles['cancel']} ${styles['handler-between']}`}>
+				 <div className={`${styles['cancel']} ${styles['handler-between']} ${styles['handler-item-circle']}`}>
 				 <i className={`${iconfont['m-icon']} ${iconfont['icon-guaduan']} ${baseStyles['ft40']}`}></i>
 				 </div>
-				 <span className={styles['btn-text']}>取消</span>
+				 <span className={styles['btn-text']}>{callConnected ? '挂断' : '取消'}</span>
 			 </div>
+			 {
+				 callConnected ?
+				  (
+						<div className={`${styles['handler-item']} ${baseStyles['pr']}`}>
+							<div onClick={ptting ? this.stopPtt : this.sipCall} className={`${styles['ptt']} ${styles['handler-center']} ${styles['handler-item-circle']}`}>
+								<i className={`${iconfont['m-icon']} ${iconfont['icon-yuyin']} ${baseStyles['ft50']}`}></i>
+							</div>
+							<span className={styles['btn-text']}>PTT</span>
+							{ ptting ?
+								(<div className={`${styles['ptt-ani']} ${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-around']}`}
+											onClick={this.stopPtt}
+								>
+									<div className={`${styles['ani-item']}`}></div>
+									<div className={`${styles['ani-item']}`}></div>
+									<div className={`${styles['ani-item']}`}></div>
+									<div className={`${styles['ani-item']}`}></div>
+									<div className={`${styles['ani-item']}`}></div>
+									<div className={`${styles['ani-item']}`}></div>
+								</div>) : ''
+							}
+						</div>
+					) :
+					(
+						<div className={`${styles['handler-item']}`}>
+							<div id="create" 
+									 className={`${styles['create']} ${styles['handler-center']} ${styles['handler-item-circle']}`}
+									 onClick={this.sipCall}
+							>
+								<i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft60']}`}></i>
+							</div>
+							<span className={styles['btn-text']}>{calling ? '连接中...' : '创建'}</span>
+						</div>
+					) 
+			 }
 			 <div className={`${styles['handler-item']}`}>
-				 <div id="create" className={`${styles['create']} ${styles['handler-center']}`}>
-					 <i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft60']}`}></i>
-				 </div>
-				 <span className={styles['btn-text']}>创建</span>
-			 </div>
-			 <div className={`${styles['handler-item']}`}>
-				 <div className={`${styles['save']} ${styles['handler-between']}`}>
+				 <div className={`${styles['save']} ${styles['handler-between']} ${styles['handler-item-circle']}`}>
 					 <i className={`${iconfont['m-icon']} ${iconfont['icon-bianji']} ${baseStyles['ft30']}`}></i>
 				 </div>
 				 <span className={styles['btn-text']}>保存</span>
@@ -301,15 +365,13 @@ export default class extends Component {
 				<div className={styles.top}></div>
 				<h2 className={styles.title}>语音通话</h2>
 				<audio id="audio_remote" autoPlay></audio>
-				<audio id="ringbackTone" autoPlay={false} controls loop src={ringbacktoneSrc}>
+				<audio id="ringbackTone" autoPlay={calling ? true : false} loop src={ringbacktoneSrc}>
 				</audio>
 				<audio id="audio_remote" autoPlay></audio>
 				<div className={`${baseStyles.h100} ${baseStyles['direction-col']} ${baseStyles['flex']} ${baseStyles['justify-center']}`}
 				>
 					<ul className={`${styles['selected-user-wrap']} ${baseStyles.flex} ${baseStyles['justify-center']}`}
 					>
-						{/* <Row>
-						</Row> */}
 							{this.selectedUsersDom()}
 					</ul>
 					{createHandlers()}

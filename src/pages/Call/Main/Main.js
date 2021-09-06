@@ -17,6 +17,10 @@ export default
 })
 
 class SipCall extends Component {
+	constructor (props) {
+		super(props)
+		this.getSelectedUsers = this.getSelectedUsers.bind(this)
+	}
 	state = {
 		height: 1080,
 		width: 1920,
@@ -38,10 +42,16 @@ class SipCall extends Component {
 
 	getSelectedUsers (data) {
 		let {sipUsers} = this.props
-		const selectedUsers = sipUsers.users.filter(user => {
-			return data.includes(user.usr_number)
+		const selectedUsers = data.map(id => {
+			return sipUsers.users.find(item => item.usr_number === id)
 		})
-		this.setState({selectedUsers})
+
+		console.log(selectedUsers, data)
+		this.setState({
+			selectedUsers: selectedUsers
+		})
+
+		console.log(this.state.selectedUsers, data, sipUsers)
 	}
 
 	componentDidMount () {
@@ -98,13 +108,11 @@ class SipCall extends Component {
 							 loading={loading}
 							 onlineIds={sipUsers.onlineUserIds}
 							 getSelectedUserIds={
-								 (data) => {
-										this.getSelectedUsers(data)
-								 }
+								this.getSelectedUsers
 							 }
 				/>
 				<Call height={height-140}
-							selectedUsers= {selectedUsers}
+							selectedUsers={selectedUsers}
 				/>
 				<div 
 					className={`${styles['right-wrap']}`}

@@ -539,6 +539,7 @@ this.addEventListener('*', function(e){
 @throws {ERR_INVALID_PARAMETER_VALUE|ERR_INVALID_PARAMETER_TYPE} <font color="red">ERR_INVALID_PARAMETER_VALUE</font> | <font color="red">ERR_INVALID_PARAMETER_TYPE</font>
 */
 SIPml.EventTarget.prototype.addEventListener = function (o_type, o_listener) {
+    console.log(o_type, 78788888888)
     if (!o_listener) {
         throw new Error("ERR_INVALID_PARAMETER_VALUE: 'listener' must not be null");
     }
@@ -780,6 +781,7 @@ SIPml.Stack = function (o_conf) {
     - o_stack {tsip_stack}
     */
 
+    console.log(o_conf)
     if (!o_conf) {
         throw new Error("ERR_INVALID_PARAMETER_VALUE: null configuration value");
     }
@@ -822,6 +824,7 @@ SIPml.Stack = function (o_conf) {
     }
 
     // create the stack
+    // console.log(o_conf, 777777777777
     this.o_stack = new tsip_stack(o_conf.realm, o_conf.impi, o_conf.impu, s_proxy, i_port);
     this.o_stack.oStack = this;
     // set configurations
@@ -854,6 +857,7 @@ SIPml.Stack = function (o_conf) {
             return;
         }
 
+        console.log(e, 857)
         switch (e.i_code) {
             case tsip_event_code_e.DIALOG_TRANSPORT_ERROR: s_type = 'transport_error'; break;
             case tsip_event_code_e.DIALOG_GLOBAL_ERROR: s_type = 'global_error'; break;
@@ -972,6 +976,7 @@ SIPml.Stack = function (o_conf) {
 
     // listen for INVITE events
     this.o_stack.on_event_invite = function (e) {
+
         var s_type = null;
         var i_session_id = e.o_session.i_id;
         var oSession = e.o_session.o_stack.oStack.ao_sessions[i_session_id];
@@ -1044,7 +1049,9 @@ SIPml.Stack = function (o_conf) {
                         }
                     default:
                         {
-                            oSession.dispatchEvent({ s_type: s_event_type, o_value: new SIPml.Session.Event(oSession, s_event_type, e) });
+                            let o_value = new SIPml.Session.Event(oSession, s_event_type, e)
+                            o_value.content = e.o_message && e.o_message.o_content || []
+                            oSession.dispatchEvent({ s_type: s_event_type, o_value});
                             break;
                         }
                 }
@@ -1529,7 +1536,7 @@ SIP session event object. You should never create an instance of this class by y
 */
 SIPml.Session.Event = function (o_session, s_type, o_event) {
     SIPml.Event.call(this, s_type, o_event);
-    this.session = o_session;
+    this.session = o_session
 }
 
 SIPml.Session.Event.prototype = Object.create(SIPml.Event.prototype);
