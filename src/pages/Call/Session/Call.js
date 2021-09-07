@@ -108,9 +108,8 @@ export default class extends Component {
 
 	// 会话的回调
 	onSipEventSession (e) {
-		const {connectedMemberObj} = this.state
+		const {connectedMemberObj, calledUsers} = this.state
     const {selectedUsers} = this.props
-		let content = []
 		const {type, session} = e
 		console.log(e)
 
@@ -159,20 +158,21 @@ export default class extends Component {
 
 						let infoArr = info.split('\r\n')
 						let cbInfo = arrToObjectBySmyble(infoArr)
-						let {action, status, state} = cbInfo
+						let {action, status, state, result, count, number} = cbInfo
 
             if (state) {
               infoUser = selectedUsers.find(item => item.usr_number === cbInfo.number)
             }
-						console.log(cbInfo, action, 1254545)
+						console.log(connectedMemberObj, cbInfo, action, 1254545)
 						if (state == 'add') {
-							// 有人加紧会话
-							connectedMemberObj[cbInfo.number] = cbInfo
+							let obj = connectedMemberObj ? {...connectedMemberObj} : {}
+							// 有人加进会话
+							obj[cbInfo.number] = cbInfo
               this.mMessage('info',`${infoUser.usr_name}接入会话`)
 
 							this.setState({callConnected: true,
 														 calling: false,
-														 connectedMemberObj
+														 connectedMemberObj: obj
 														})
 						} else if (state == 'talking') {
 							// count: "2"
@@ -185,7 +185,6 @@ export default class extends Component {
                   ...infoUser
                 }
               })
-              this.mMessage('info',`${infoUser.usr_name}正在讲话`)
 						} else if (state == 'release') {
 							// count: "2"
 							// number: "10010023"
@@ -196,11 +195,18 @@ export default class extends Component {
 						} else if (state == 'del') {
 							// count: "1", state: "del", number: "10010023"
               this.mMessage('info',`${infoUser.usr_name}结束通话`)
+							if (count == 1){//整个会话结束
+								this.hangUp()
+							}else{//成员退出
+								this.removeSelectedUser(number)
+								let _calledUsers = calledUsers.filter(item => item.usr_number !== number)
+								this.setState({calledUsers: _calledUsers})
+							}
 						}
 						else if (action == 'req') {
 							// 自己申请ptt
 							this.setState({ptting: status == 'ok' ? true : false})
-						} else if (action == 'rel' && status == 'ok') {
+						} else if (action == 'rel' && result == 'ok') {
 							// 自己释放ptt
 							this.setState({ptting: false})
 						}
@@ -215,9 +221,18 @@ export default class extends Component {
 					oSipSessionRegister = null;
 				}
 				else if (session == oSipSessionCall) {
+					this.mMessage('error','呼叫终止')
+					selectedUsers.forEach(user => {
+						this.removeSelectedUser(user.usr_number)
+					})
+					this.setState({
+						callConnected: false, 
+						sessionId: null, 
+						calling: false,
+						connectedMemberObj: null,
+						calledUsers: []
+					})
 					oSipSessionCall = null;
-					this.setState({callConnected: false, calling: false})
-					this.oMessage('error','呼叫终止')
 				}
 				break;
 			}
@@ -290,9 +305,9 @@ export default class extends Component {
       events_listener: {
         events: '*',
         listener: (e)=> {
-          this.oSipSessionCall(e)
-          }
+          this.onSipEventSession(e)
         }
+      }
     })
   }
 
@@ -342,14 +357,14 @@ export default class extends Component {
 	selectedUsersDom () {
 		const {selectedUsers=[]} = this.props
     const {sessionId, talkingUser, calledUsers, connectedMemberObj} = this.state
-
     const users = calledUsers.length ? calledUsers : selectedUsers
+		console.log(11112121, talkingUser)
 
 		return (
 			users.map( (user)=> {
 				return (
 							<li
-									key={user.usr_number}
+									key={user.usr_number + new Date().getTime()}
 									className={`${styles['selected-user-item']} ${baseStyles['m-box-border']}`}>
 									<div className={`${styles['avatar-wrap']}`}>
 										<div className={`${styles['top-info']} ${baseStyles['flex']} ${baseStyles['align-center']}`}>
@@ -357,15 +372,15 @@ export default class extends Component {
                         !sessionId ?
                         <Icon type="close"
                               className={`${baseStyles['pointer']}`}
-                              onClick={this.removeSelectedUser.bind(this,user.usr_number)}
+                              onClick={this.removeSelectedUser.bind(this, user.usr_number)}
                         />
                         : ''
                       }
 
-                      { sessionId ?
-                        [<span className={`${styles['state-icon']} ${styles[connectedMemberObj[usr_number] ? 'light': 'dark']}`}></span>,
+                      { sessionId && connectedMemberObj ?
+                        [<span className={`${styles['state-icon']} ${styles[connectedMemberObj[user.usr_number] ? 'light': 'dark']}`}></span>,
                         <div className={`${baseStyles.ft12} ${styles['user-state']}`}>
-                          已连接
+                          {connectedMemberObj[user.usr_number] ? '已接入' : '连接中'}
                         </div>] : ''
                       }
 										</div>
@@ -378,7 +393,7 @@ export default class extends Component {
                       </div>
 										</span>
 
-                    {talkingUser ? this.talkingDom('talking-ani') : ''}
+                    {talkingUser && talkingUser.usr_number === user.usr_number ? this.talkingDom('talking-ani') : ''}
 									</div>
 							</li>
 				)

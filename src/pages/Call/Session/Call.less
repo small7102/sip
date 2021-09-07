@@ -144,28 +144,35 @@
 		left: 0;
 		transform: translateY(-29px);
 	}
-  .talking-ani{
-    height: 30px;
-    width: 80px;
-  }
   .ani-item{
-    height: 20px;
+		height: 20px;
     width: 2px;
     background: #fff;
     margin: 0 2px;
     animation: pttAni .3s linear infinite
   }
   .ani-item:nth-child(3){
-    margin-right: 20px;
+		margin-right: 20px;
     animation-delay: .2s;
   }
   .ani-item:nth-child(4){
-    margin-left: 20px;
+		margin-left: 20px;
     animation-delay: .2s;
   }
   .ani-item:nth-child(2),.ani-item:nth-child(5){
-    animation-delay: .1s;
+		animation-delay: .1s;
   }
+	.talking-ani{
+		height: 30px;
+		width: 80px;
+		.ani-item:nth-child(3){
+			margin-right: 2px;
+		}
+		.ani-item:nth-child(4){
+			margin-left: 2px;
+		}
+	}
+
 }
 
 @keyframes pttAni{
