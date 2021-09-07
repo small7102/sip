@@ -24,11 +24,15 @@ body {
 ul,
 ol {
   list-style: none;
+  padding: 0;
 }
 .ant-layout-content {
   margin: 0 !important;
 }
 :global .ant-layout-content {
   margin: 0 !important;
+}
+:global .ant-message-notice-content {
+  background-color: rgba(0, 0, 0, 0.4);
 }
 /*# sourceMappingURL=./global.css.map */

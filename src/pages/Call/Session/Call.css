@@ -26,8 +26,9 @@
 .call-wrap .selected-user-wrap {
   width: 80%;
   max-width: 700px;
-  min-width: 600px;
   margin: 80px auto;
+  flex-wrap: wrap;
+  max-height: 70%;
 }
 .call-wrap .selected-user-item {
   height: 230px;
@@ -36,6 +37,7 @@
   border-radius: 12px;
   display: inline-block;
   overflow: hidden;
+  margin: 10px;
 }
 .call-wrap .selected-user-item .avatar-wrap {
   height: 180px;
@@ -53,6 +55,7 @@
   right: 0;
   height: 30px;
   background-color: rgba(0, 0, 0, 0.4);
+  padding: 3px 10px;
 }
 .call-wrap .selected-user-item .sub-info {
   padding: 0 10px;
@@ -65,29 +68,47 @@
 .call-wrap .handlers {
   margin: 80px;
 }
-.call-wrap .handler-item > div {
+.call-wrap .handler-item .handler-item-circle {
   border-radius: 100%;
   margin: 0 20px;
+  cursor: pointer;
+  position: relative;
+}
+.call-wrap .handler-item .handler-item-circle:hover {
+  opacity: 0.8;
+  transition: all 0.2s;
 }
 .call-wrap .handler-between {
   width: 80px;
   height: 80px;
-  margin: 20px !important;
+  margin: 10px 20px !important;
+  text-align: center;
+  line-height: 80px;
 }
 .call-wrap .handler-center {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
+  line-height: 100px;
+  text-align: center;
 }
 .call-wrap .cancel {
-  background-color: rgba(255, 255, 255, 0.3);
-  border: 1px solid #fff;
+  background-color: rgba(246, 40, 40, 0.28);
+  border: 1px solid rgba(246, 40, 40, 0.67);
+  color: #f62828;
 }
 .call-wrap .save {
   background-color: rgba(255, 255, 255, 0.3);
   border: 1px solid #fff;
+  font-size: 30px !important;
+  line-height: 70px;
 }
 .call-wrap .create {
   background-color: #3e79f2;
+  font-size: 60px;
+}
+.call-wrap .ptt {
+  background-color: #1b9e4c;
+  font-size: 60px;
 }
 .call-wrap .btn-text {
   font-size: 12px;
@@ -95,10 +116,68 @@
   display: block;
   text-align: center;
   line-height: 40px;
-  width: 40px;
+  width: 100%;
   margin: 0 auto;
 }
-.call-wrap .btn-text:nth-child(2n-1) {
-  margin-top: ;
+.call-wrap .ptt-ani {
+  position: absolute;
+  padding: 0 22px;
+  width: 100%;
+  height: 30px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-29px);
+}
+.call-wrap .talking-ani {
+  height: 30px;
+  width: 80px;
+}
+.call-wrap .ani-item {
+  height: 20px;
+  width: 2px;
+  background: #fff;
+  margin: 0 2px;
+  animation: pttAni 0.3s linear infinite;
+}
+.call-wrap .ani-item:nth-child(3) {
+  margin-right: 20px;
+  animation-delay: 0.2s;
+}
+.call-wrap .ani-item:nth-child(4) {
+  margin-left: 20px;
+  animation-delay: 0.2s;
+}
+.call-wrap .ani-item:nth-child(2),
+.call-wrap .ani-item:nth-child(5) {
+  animation-delay: 0.1s;
+}
+@keyframes pttAni {
+  from {
+    transform: scaleY(0.2);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@media (max-width: 1500px) {
+  .call-wrap .selected-user-wrap {
+    margin: 40px;
+    max-height: 80%;
+  }
+  .call-wrap .selected-user-item {
+    height: 200px;
+    width: 160px;
+    background: #183473;
+    border-radius: 12px;
+    display: inline-block;
+    overflow: hidden;
+    margin: 10px;
+  }
+  .call-wrap .selected-user-item .avatar-wrap {
+    height: 160px;
+    width: 160px;
+    overflow: hidden;
+    position: relative;
+  }
 }
 /*# sourceMappingURL=./Call.css.map */

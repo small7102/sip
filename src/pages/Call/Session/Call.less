@@ -27,6 +27,7 @@
 		max-width: 700px;
 		margin: 80px auto;
 		flex-wrap: wrap;
+    max-height: 70%;
 	}
 	.selected-user-item {
 		height: 230px;
@@ -126,25 +127,29 @@
 		top: 50%;
 		left: 0;
 		transform: translateY(-29px);
-		.ani-item{
-			height: 20px;
-			width: 2px;
-			background: #fff;
-			margin: 0 2px;
-			animation: pttAni .3s linear infinite
-		}
-		.ani-item:nth-child(3){
-			margin-right: 20px;
-      animation-delay: .2s;
-		}
-		.ani-item:nth-child(4){
-			margin-left: 20px;
-			animation-delay: .2s;
-		}
-		.ani-item:nth-child(2),.ani-item:nth-child(5){
-			animation-delay: .1s;
-		}
 	}
+  .talking-ani{
+    height: 30px;
+    width: 80px;
+  }
+  .ani-item{
+    height: 20px;
+    width: 2px;
+    background: #fff;
+    margin: 0 2px;
+    animation: pttAni .3s linear infinite
+  }
+  .ani-item:nth-child(3){
+    margin-right: 20px;
+    animation-delay: .2s;
+  }
+  .ani-item:nth-child(4){
+    margin-left: 20px;
+    animation-delay: .2s;
+  }
+  .ani-item:nth-child(2),.ani-item:nth-child(5){
+    animation-delay: .1s;
+  }
 }
 
 @keyframes pttAni{
@@ -154,4 +159,28 @@
 	to {
 		transform: scaleY(1);
 	}
+}
+
+@media (max-width: 1500px) {
+  .call-wrap{
+    .selected-user-wrap {
+      margin: 40px;
+      max-height: 80%;
+    }
+    .selected-user-item {
+      height: 200px;
+      width: 160px;
+      background: #183473;
+      border-radius: 12px;
+      display: inline-block;
+      overflow: hidden;
+      margin: 10px;
+      .avatar-wrap {
+        height: 160px;
+        width: 160px;
+        overflow: hidden;
+        position: relative;
+      }
+    }
+  }
 }

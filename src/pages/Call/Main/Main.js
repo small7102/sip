@@ -21,6 +21,9 @@ class SipCall extends Component {
 		super(props)
 		this.getSelectedUsers = this.getSelectedUsers.bind(this)
 	}
+  componentWillMount(){
+    this.loadSipAssets()
+  }
 	state = {
 		height: 1080,
 		width: 1920,
@@ -28,6 +31,7 @@ class SipCall extends Component {
 		pwd: '460490',
 		selectedUserIds: [],
 		selectedUsers: [],
+    userRef: null
 	}
 
 	loadSipAssets() {
@@ -40,19 +44,29 @@ class SipCall extends Component {
 		})
 	}
 
-	getSelectedUsers (data) {
+	getSelectedUsers =(data)=> {
 		let {sipUsers} = this.props
 		const selectedUsers = data.map(id => {
 			return sipUsers.users.find(item => item.usr_number === id)
 		})
 
-		console.log(selectedUsers, data)
-		this.setState({
-			selectedUsers: selectedUsers
+		this.setState({selectedUsers})
+
+	}
+
+  removeSelectedUser = (usr_number) => {
+    const {selectedUsers, userRef} = this.state
+    const _selectedUsers = selectedUsers.filter(user => {
+			return user.usr_number != usr_number
 		})
 
-		console.log(this.state.selectedUsers, data, sipUsers)
-	}
+    this.setState({selectedUsers: _selectedUsers})
+    userRef.removeUserById(usr_number)
+  }
+
+  onRef= (ref)=> {
+    this.setState({userRef: ref})
+  }
 
 	componentDidMount () {
 		const { dispatch } = this.props;
@@ -79,42 +93,43 @@ class SipCall extends Component {
 				}
 			});
 		}, QUERY_ONLINE_DURATION)
+
 		this.setState({
 			height: document.body.clientHeight,
 			width: document.body.clientWidth
 		})
-		
+
 		window.addEventListener('resize', () => {
 			this.setState({
 				height: document.body.clientHeight,
 				width: document.body.clientWidth
-			})		
+			})
 		})
 	}
 
 	render () {
 		let {sipUsers, loading} = this.props
 		let {height, width, selectedUsers} = this.state
-		this.loadSipAssets()
-	
+
 		return(
 			<div
 				className={`${styles.sipcall} ${baseStyles['flex']}`}
 				style={{height: `${height-48}px`}}
 			>
-				<Users height={height-140} 
+				<Users ref="users"
+               height={height-140}
 							 width={width > 1500 ? 360 : 300}
 							 users={sipUsers.users}
 							 loading={loading}
 							 onlineIds={sipUsers.onlineUserIds}
-							 getSelectedUserIds={
-								this.getSelectedUsers
-							 }
+							 getSelectedUserIds={this.getSelectedUsers}
+               onRef={this.onRef}
 				/>
 				<Call height={height-140}
 							selectedUsers={selectedUsers}
+              removeSelectedUser={this.removeSelectedUser}
 				/>
-				<div 
+				<div
 					className={`${styles['right-wrap']}`}
 				>
 					<History height={height - 450} width={width > 1500 ? 300 : 240}></History>

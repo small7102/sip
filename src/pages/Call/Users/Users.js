@@ -27,13 +27,13 @@ class Users extends Component {
 			users = onlineUsers.concat(offlineUsers)
 		}
 		return users.map(item => {
-			return (<li className={`${baseStyles['m-item']} ${styles['user-item']} ${onlineIds.includes(item.usr_number) ? styles['online'] : styles['offline']}`} 
+			return (<li className={`${baseStyles['m-item']} ${styles['user-item']} ${onlineIds.includes(item.usr_number) ? styles['online'] : styles['offline']}`}
 									key={item.usr_uuid}
 									style={{width: `${this.width-20}px`}}
 							>
 						<div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
-							<div className={`${baseStyles['flex-item']}`}>	
-								<Checkbox 
+							<div className={`${baseStyles['flex-item']}`}>
+								<Checkbox
 									value={item.usr_number}
 									>
 									<Avatar
@@ -56,10 +56,22 @@ class Users extends Component {
 
 	onSelectedUsersChange (data) {
 		this.props.getSelectedUserIds(data)
+    this.setState({selectedUserIds: data})
 	}
-	
+
+  removeUserById (id) {
+    const {selectedUserIds} = this.state
+    const _selectedUserIds = selectedUserIds.filter(item => item != id)
+    this.setState({selectedUserIds: _selectedUserIds})
+  }
+
+  componentDidMount(){
+      this.props.onRef(this)
+  }
+
 	render () {
 		let {height, width = 360, users, loading, onlineIds} = this.props
+    const {selectedUserIds} = this.state
 		return(
 			<Box
 				title="通讯录"
@@ -67,11 +79,12 @@ class Users extends Component {
 				width={width}
 				content={
 					<div>
-						<Input placeholder="输入名称" 
+						<Input placeholder="输入名称"
 									prefix={<Icon type="search" style={{ color: 'rgba(0,0,0,.25)' }} />}
 									style={{backgroundColor: 'rgba(255,255,255,.1) !important'}}
 						/>
 						<Checkbox.Group className={`${baseStyles['w100']}`}
+                            value={selectedUserIds}
 														onChange={this.onSelectedUsersChange}
 						>
 							<ul className={`${styles['list-wrap']} ${baseStyles['scroll-bar']}`} style={{height: `${height-100}px`}}>
