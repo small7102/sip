@@ -209,6 +209,7 @@ export default class extends Component {
 				else if (session == oSipSessionCall) {
 					oSipSessionCall = null;
 					this.setState({callConnected: false, calling: false})
+					this.oMessage('error','呼叫终止')
 				}
 				break;
 			}
