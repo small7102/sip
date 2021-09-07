@@ -1705,8 +1705,15 @@ Terminates the audio/video call.
 @returns {Integer} 0 if successful; otherwise nonzero
 @throws {ERR_NOT_READY} <font color="red">ERR_NOT_READY</font>
 */
-SIPml.Session.Call.prototype.hangup = function (o_conf) {
-    this.setConfiguration(o_conf);
+SIPml.Session.Call.prototype.hangup = function (o_conf={}) {
+   
+  o_conf.sip_headers = o_conf.sip_headers || []
+  o_conf.sip_headers.push({
+    name: 'Call-Info',
+    value: 'autoanswer=yes'
+  })
+  
+  this.setConfiguration(o_conf);
     return this.o_session.hangup();
 }
 

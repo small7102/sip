@@ -18,6 +18,7 @@ export default class extends Component {
 		super(props)
 		this.sipCall = this.sipCall.bind(this)
 		this.stopPtt = this.stopPtt.bind(this)
+		this.hangUp = this.hangUp.bind(this)
 		this.removeSelectedUser = this.removeSelectedUser.bind(this)
 	}
 	state = {
@@ -27,6 +28,7 @@ export default class extends Component {
 		oSipStack: null,
 		oSipSessionRegister: null,
 		oSipSessionCall: null,
+    netNormal: true,
 		oConfigCall: {
 			bandwidth: { audio: undefined, video: undefined },
 			events_listener: { events: '*', listener: (e) => {
@@ -37,12 +39,13 @@ export default class extends Component {
         { name: 'language', value: '\"en,fr\"' }
 			]
 		},
-		connectedMemberObj: {},
+		connectedMemberObj: {},//已经加入通话的成员
     talkingUser: null,
 		ptting: false, // 正在ptt
 		calling: false, // 正在拨号
 		callConnected: false,
 		sessionId: null,
+    calledUsers: [],//已经创建呼叫的成员
 		loginConfig: {
 			display_name: '10010022',
 			enable_early_ims: true,
@@ -65,13 +68,13 @@ export default class extends Component {
 		}
 	}
 
-  mMessgae (type, text) {
+  mMessage (type, text) {
     message.destroy()
     message[type](text)
   }
 
 	onSipEventStack (e) {
-		// console.log(e.type, 111)
+		console.log(e.type, 111)
 		switch (e.type) {
 			case 'started':
 				{
@@ -95,16 +98,22 @@ export default class extends Component {
 					}
 					break;
 				}
+        case 'failed_to_start': {
+          this.setState({netNormal: false})
+          this.mMessage('error', 'scoket连接失败')
+        }
 				default: break;
 		}
 	}
 
 	// 会话的回调
 	onSipEventSession (e) {
-		// let {oSipSessionRegister, oSipSessionCall} = this.state
+		const {connectedMemberObj} = this.state
+    const {selectedUsers} = this.props
 		let content = []
 		const {type, session} = e
 		console.log(e)
+
 		switch (type) {
 			case 'connecting': {
 				break;
@@ -153,14 +162,13 @@ export default class extends Component {
 						let {action, status, state} = cbInfo
 
             if (state) {
-              infoUser = this.selectedUsers.find(item => item.usr_number === cbInfo.number)
+              infoUser = selectedUsers.find(item => item.usr_number === cbInfo.number)
             }
 						console.log(cbInfo, action, 1254545)
 						if (state == 'add') {
 							// 有人加紧会话
-							const connectedMemberObj = {...this.state.connectedMemberObj}
 							connectedMemberObj[cbInfo.number] = cbInfo
-              this.oMessage('info',`${infoUser.usr_name}接入会话`)
+              this.mMessage('info',`${infoUser.usr_name}接入会话`)
 
 							this.setState({callConnected: true,
 														 calling: false,
@@ -177,7 +185,7 @@ export default class extends Component {
                   ...infoUser
                 }
               })
-              this.oMessage('info',`${infoUser.usr_name}正在讲话`)
+              this.mMessage('info',`${infoUser.usr_name}正在讲话`)
 						} else if (state == 'release') {
 							// count: "2"
 							// number: "10010023"
@@ -187,7 +195,7 @@ export default class extends Component {
               })
 						} else if (state == 'del') {
 							// count: "1", state: "del", number: "10010023"
-              this.oMessage('info',`${infoUser.usr_name}结束通话`)
+              this.mMessage('info',`${infoUser.usr_name}结束通话`)
 						}
 						else if (action == 'req') {
 							// 自己申请ptt
@@ -225,12 +233,18 @@ export default class extends Component {
 
 	// 开始拨号
 	sipCall () {
-		// if (!this.state.sipAvalible) return // sip登录时代
-		let {selectedUsers} = this.props
+
+    const {selectedUsers} = this.props
+    const {netNormal} = this.state
 		if (!selectedUsers.length) return
 
-		if (this.state.callConnected && oSipSessionCall) {
-			let reqRes = oSipSessionCall.info(`action=req\r\nid=${this.state.sessionId}level=1`,
+		if(!netNormal){
+      this.mMessage('error', 'scoket连接失败')
+      return
+    }
+
+		if (this.state.callConnected && oSipSessionCall) { //申请通话权限
+			oSipSessionCall.info(`action=req\r\nid=${this.state.sessionId}level=1`,
 				'application/poc_msg',
 				this.state.oConfigCall
 			)
@@ -243,18 +257,19 @@ export default class extends Component {
 
 			let roomId = this.randomRoom()
 			let config = {...this.state.oConfigCall}
-			console.log(this.state.sessionId, config, '会话id')
+			// console.log(this.state.sessionId, config, '会话id')
 			let tempGroup = oSipSessionCall.call(roomId, {
 				...config,
-				members: '10010023#10010007'
-				// members: selectedUsers.map(item=> item.usr_number).join('#')
+				members: selectedUsers.map(item=> item.usr_number).join('#')
 			})
 			if (tempGroup !=0) {
 				console.log('拨号失败...')
 				oSipSessionCall = null
 				this.setState({calling: false, sessionId: null})
         this.mMessgae('error','呼叫失败')
-			}
+			} else {
+        this.setState({calledUsers: [...selectedUsers]})
+      }
 
 		} else if (oSipSessionCall) {
 			console.log(oSipSessionCall)
@@ -263,14 +278,22 @@ export default class extends Component {
 	}
 
 	stopPtt () {
-		console.log('挂断')
-		let hanguoRes = oSipSessionCall.info(`action=rel\r\nid=${this.state.sessionId}level=1`,
+		oSipSessionCall.info(`action=rel\r\nid=${this.state.sessionId}level=1`,
 			'application/poc_msg',
 			this.state.oConfigCall
 		)
-
-		this.setState({ptting: false})
 	}
+
+  hangUp () {
+    oSipSessionCall && oSipSessionCall.hangup({
+      events_listener: {
+        events: '*',
+        listener: (e)=> {
+          this.oSipSessionCall(e)
+          }
+        }
+    })
+  }
 
   removeSelectedUser (id) {
     this.props.removeSelectedUser(id)
@@ -278,9 +301,6 @@ export default class extends Component {
 
 	componentDidMount () {
 		let audioRemote = document.getElementById('audio_remote')
-		let create = document.getElementById('create')
-
-		// let ringbackTone = document.getElementById('ringbackTone')
 
 		const { loginConfig, oConfigCall } = this.state
     const {height} = this.props
@@ -319,17 +339,19 @@ export default class extends Component {
   }
 
 	selectedUsersDom () {
-		let {selectedUsers} = this.props
-    const {sessionId, talkingUser} = this.state
-		selectedUsers = selectedUsers || []
+		const {selectedUsers=[]} = this.props
+    const {sessionId, talkingUser, calledUsers, connectedMemberObj} = this.state
+
+    const users = calledUsers.length ? calledUsers : selectedUsers
+
 		return (
-			selectedUsers.map( (user)=> {
+			users.map( (user)=> {
 				return (
 							<li
 									key={user.usr_number}
 									className={`${styles['selected-user-item']} ${baseStyles['m-box-border']}`}>
 									<div className={`${styles['avatar-wrap']}`}>
-										<div className={styles['top-info']}>
+										<div className={`${styles['top-info']} ${baseStyles['flex']} ${baseStyles['align-center']}`}>
                       {
                         !sessionId ?
                         <Icon type="close"
@@ -338,12 +360,21 @@ export default class extends Component {
                         />
                         : ''
                       }
+
+                      { sessionId ?
+                        [<span className={`${styles['state-icon']} ${styles[connectedMemberObj[usr_number] ? 'light': 'dark']}`}></span>,
+                        <div className={`${baseStyles.ft12} ${styles['user-state']}`}>
+                          已连接
+                        </div>] : ''
+                      }
 										</div>
 										<img src="https://hbimg.huabanimg.com/2d431c924927b2968d26722f519ae7ed38094e36d192-34zNAY_fw658/format/webp"/>
 									</div>
 									<div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${styles['sub-info']}`}>
-										<span className={`${baseStyles['flex-item']} ${styles.name} ${baseStyles['text-overflow']}`}>
-											{user.usr_name} {user.usr_number}
+										<span className={`${baseStyles['flex-item']} ${baseStyles['text-overflow']}`}>
+                      <div className={`${styles.name}`}>
+											  {user.usr_name}
+                      </div>
 										</span>
 
                     {talkingUser ? this.talkingDom('talking-ani') : ''}
@@ -358,7 +389,9 @@ export default class extends Component {
   createHandlers = () => {
     const { callConnected, calling, ptting } = this.state
     return (<div className={`${styles.handlers} ${baseStyles['flex']} ${baseStyles['justify-center']} ${baseStyles['align-center']}`}>
-     <div className={`${styles['handler-item']}`}>
+     <div className={`${styles['handler-item']}`}
+          onClick={this.hangUp}
+      >
        <div className={`${styles['cancel']} ${styles['handler-between']} ${styles['handler-item-circle']}`}>
        <i className={`${iconfont['m-icon']} ${iconfont['icon-guaduan']} ${baseStyles['ft40']}`}></i>
        </div>
@@ -399,7 +432,7 @@ export default class extends Component {
  )};
 
 	render () {
-		const { height } = this.props;
+		const { height, selectedUsers } = this.props;
 		const { calling, talkingUser } = this.state
 		return (
 			<div className={`${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
@@ -426,7 +459,7 @@ export default class extends Component {
               </div>
             )
           }
-					{this.createHandlers()}
+					{ selectedUsers.length ? this.createHandlers() : ''}
 				</div>
 			</div>
 		)

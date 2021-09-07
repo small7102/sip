@@ -2,7 +2,7 @@
 	margin: 0 12px;
 	border-radius: 20px;
 	position: relative;
-	min-width: 800px;
+	min-width: 600px;
 	color: #fff;
 	.top{
 		position: absolute;
@@ -59,10 +59,26 @@
 			padding: 0 10px
 		}
 		.name {
-			font-size: 16px;
+			font-size: 15px;
 			color: #fff;
 			line-height: 40px;
 		}
+    .user-state{
+      color: rgba(255, 255, 255, .8);
+    }
+    .state-icon{
+      height: 13px;
+      width: 13px;
+      border-radius: 100%;
+      margin: 0 3px;
+      display: inline-block;
+    }
+    .state-icon.light{
+      background-color: rgb(49, 225, 49);
+    }
+    .state-icon.dark{
+      background-color: rgb(201, 211, 201);
+    }
 	}
   .handlers {
     margin: 80px;

@@ -2,7 +2,7 @@
   margin: 0 12px;
   border-radius: 20px;
   position: relative;
-  min-width: 800px;
+  min-width: 600px;
   color: #fff;
 }
 .call-wrap .top {
@@ -61,9 +61,25 @@
   padding: 0 10px;
 }
 .call-wrap .selected-user-item .name {
-  font-size: 16px;
+  font-size: 15px;
   color: #fff;
   line-height: 40px;
+}
+.call-wrap .selected-user-item .user-state {
+  color: rgba(255, 255, 255, 0.8);
+}
+.call-wrap .selected-user-item .state-icon {
+  height: 13px;
+  width: 13px;
+  border-radius: 100%;
+  margin: 0 3px;
+  display: inline-block;
+}
+.call-wrap .selected-user-item .state-icon.light {
+  background-color: #31e131;
+}
+.call-wrap .selected-user-item .state-icon.dark {
+  background-color: #c9d3c9;
 }
 .call-wrap .handlers {
   margin: 80px;
