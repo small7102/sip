@@ -539,7 +539,6 @@ this.addEventListener('*', function(e){
 @throws {ERR_INVALID_PARAMETER_VALUE|ERR_INVALID_PARAMETER_TYPE} <font color="red">ERR_INVALID_PARAMETER_VALUE</font> | <font color="red">ERR_INVALID_PARAMETER_TYPE</font>
 */
 SIPml.EventTarget.prototype.addEventListener = function (o_type, o_listener) {
-    console.log(o_type, 78788888888)
     if (!o_listener) {
         throw new Error("ERR_INVALID_PARAMETER_VALUE: 'listener' must not be null");
     }
@@ -780,8 +779,6 @@ SIPml.Stack = function (o_conf) {
     members:
     - o_stack {tsip_stack}
     */
-
-    console.log(o_conf)
     if (!o_conf) {
         throw new Error("ERR_INVALID_PARAMETER_VALUE: null configuration value");
     }
@@ -900,6 +897,7 @@ SIPml.Stack = function (o_conf) {
 
         if (s_type) {
             // 'i_new_call' is stack-level event
+            console.log(s_type, e, 'message')
             if (s_type == 'i_new_message') {
                 var oNewEvent = new SIPml.Stack.Event(s_type, e);
                 oNewEvent.newSession = new SIPml.Session.Message(e.o_session);
@@ -1298,6 +1296,8 @@ SIPml.Stack.prototype.newSession = function (s_type, o_conf) {
     }
 
     o_session.b_local = true; // locally created session
+
+    console.log(o_conf, s_type, 7777777777777)
     var oSession = new cls(o_session, o_conf);
     this.ao_sessions[oSession.getId()] = oSession;
     return oSession;

@@ -29,6 +29,7 @@ class SipCall extends Component {
 		width: 1920,
 		usernumber: '10010007',
 		pwd: '460490',
+		socket_url: 'wss://183.47.46.242:7443',
 		selectedUserIds: [],
 		selectedUsers: [],
     userRef: null
@@ -63,6 +64,24 @@ class SipCall extends Component {
     this.setState({selectedUsers: _selectedUsers})
     userRef.removeUserById(usr_number)
   }
+
+	usersOfUpMyself () {
+		const {sipUsers} = this.props
+		const {usernumber} = this.state
+		let users = [...sipUsers.users], myself
+		
+		users = users.filter(user => {
+			if (user.usr_number !== usernumber) {
+				return true
+			} else {
+				myself = user
+				return false
+			}
+		})
+		
+		myself && users.unshift(myself)
+		return users
+	}
 
   onRef= (ref)=> {
     this.setState({userRef: ref})
@@ -109,7 +128,7 @@ class SipCall extends Component {
 
 	render () {
 		let {sipUsers, loading} = this.props
-		let {height, width, selectedUsers} = this.state
+		let {height, width, selectedUsers, usernumber, pwd, socket_url} = this.state
 
 		return(
 			<div
@@ -119,21 +138,23 @@ class SipCall extends Component {
 				<Users ref="users"
                height={height-140}
 							 width={width > 1500 ? 360 : 300}
-							 users={sipUsers.users}
+							 users={this.usersOfUpMyself()}
 							 loading={loading}
 							 onlineIds={sipUsers.onlineUserIds}
 							 getSelectedUserIds={this.getSelectedUsers}
                onRef={this.onRef}
+							 usernumber={usernumber}
 				/>
 				<Call height={height-140}
 							selectedUsers={selectedUsers}
               removeSelectedUser={this.removeSelectedUser}
+							account={{usernumber, pwd, socket_url}}
 				/>
 				<div
 					className={`${styles['right-wrap']}`}
 				>
-					<History height={height - 450} width={width > 1500 ? 300 : 240}></History>
-					<Tempgroups height={290} width={width > 1500 ? 300 : 240}></Tempgroups>
+					<History height={height - 450} width={width > 1500 ? 360 : 300}></History>
+					<Tempgroups height={290} width={width > 1500 ? 360 : 300}></Tempgroups>
 				</div>
 			</div>
 		)

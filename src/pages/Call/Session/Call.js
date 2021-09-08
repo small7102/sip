@@ -11,6 +11,7 @@ import {byteToString, arrToObjectBySmyble} from '../utils'
 let oSipStack = null
 let oSipSessionRegister = null
 let oSipSessionCall = null
+let oSipSessionMessage = null
 
 export default class extends Component {
 
@@ -45,9 +46,9 @@ export default class extends Component {
 		calling: false, // 正在拨号
 		callConnected: false,
 		sessionId: null,
+		userCardSty: '',
     calledUsers: [],//已经创建呼叫的成员
 		loginConfig: {
-			display_name: '10010022',
 			enable_early_ims: true,
 			enable_media_stream_cache: false,
 			enable_rtcweb_breaker: true,
@@ -55,16 +56,12 @@ export default class extends Component {
 				this.onSipEventStack(e)
 			} },
 			ice_servers: "[]",
-			impi: "10010022",
-			impu: "sip:10010022@kinet",
 			outbound_proxy_url: "",
-			password: "228304",
 			realm: "kinet",
 			sip_headers: [
 				{ name: 'User-Agent', value: 'IM-client/OMA1.0 sipML5-v1.2016.03.04' },
 				{ name: 'Organization', value: 'Doubango Telecom' }
 			],
-			websocket_proxy_url: "wss://183.47.46.242:7443"
 		}
 	}
 
@@ -92,6 +89,20 @@ export default class extends Component {
 							]
 						})
 						oSipSessionRegister.register();
+
+						oSipSessionMessage = oSipStack.newSession('message',{
+							expires: 200,
+							events_listener: { events: '*', listener: (e) => {
+								this.onSipEventSession(e)
+							} },
+							sip_caps: [
+													{ name: '+g.oma.sip-im', value: null },
+													//{ name: '+sip.ice' }, // rfc5768: FIXME doesn't work with Polycom TelePresence
+													{ name: '+audio', value: null },
+													{ name: 'language', value: '\"en,fr\"' }
+							]
+						})
+						oSipSessionMessage.message();
 					}
 					catch (e) {
 
@@ -102,6 +113,18 @@ export default class extends Component {
           this.setState({netNormal: false})
           this.mMessage('error', 'scoket连接失败')
         }
+				case 'i_new_call': {
+					if (oSipSessionCall) {
+						e.newSession.hangup()
+					} else {
+						oSipSessionCall.setConfiguration(this.state.oConfigCall);
+					}
+					break;
+				}
+				case 'i_new_message': {
+					console.log(e, 'messsage')
+					break;
+				}
 				default: break;
 		}
 	}
@@ -226,8 +249,8 @@ export default class extends Component {
 						this.removeSelectedUser(user.usr_number)
 					})
 					this.setState({
-						callConnected: false, 
-						sessionId: null, 
+						callConnected: false,
+						sessionId: null,
 						calling: false,
 						connectedMemberObj: null,
 						calledUsers: []
@@ -266,7 +289,7 @@ export default class extends Component {
 			)
 			return
 		}
-		if (oSipStack && !oSipSessionCall && !tsk_string_is_null_or_empty('10010023')) {
+		if (oSipStack && !oSipSessionCall) {
 			oSipSessionCall = oSipStack.newSession('call-audio', this.state.oConfigCall)
 
 			this.setState({sessionId: oSipSessionCall.o_session.i_id, calling: true})
@@ -279,7 +302,6 @@ export default class extends Component {
 				members: selectedUsers.map(item=> item.usr_number).join('#')
 			})
 			if (tempGroup !=0) {
-				console.log('拨号失败...')
 				oSipSessionCall = null
 				this.setState({calling: false, sessionId: null})
         this.mMessgae('error','呼叫失败')
@@ -288,7 +310,6 @@ export default class extends Component {
       }
 
 		} else if (oSipSessionCall) {
-			console.log(oSipSessionCall)
 			// oSipSessionCall.accept(this.state.oConfigCall)
 		}
 	}
@@ -315,6 +336,25 @@ export default class extends Component {
     this.props.removeSelectedUser(id)
   }
 
+	componentWillMount () {
+		const {account} = this.props
+		const {loginConfig} = this.state
+
+		const {usernumber, pwd, socket_url} = account
+		const _loginConfig = {
+				...loginConfig,
+				display_name: usernumber,
+				impi: usernumber,
+				impu: `sip:${usernumber}@kinet`,
+				password: pwd,
+				websocket_proxy_url: socket_url
+		}
+
+		this.setState({
+			loginConfig: _loginConfig
+		})
+	}
+
 	componentDidMount () {
 		let audioRemote = document.getElementById('audio_remote')
 
@@ -329,9 +369,8 @@ export default class extends Component {
 			if (!oSipStack) {
 				oSipStack = new SIPml.Stack(loginConfig)
 
-				let startRes = oSipStack.start()
+				oSipStack.start()
 			}
-      console.log('init-init')
     }, 2000)
 
 
@@ -343,7 +382,7 @@ export default class extends Component {
 
   talkingDom (className) {
     return(
-      <div className={`${styles[className]} ${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-around']}`}>
+      <div className={`${styles[className]} ${baseStyles['pointer']} ${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-around']}`}>
         <div className={`${styles['ani-item']}`}></div>
         <div className={`${styles['ani-item']}`}></div>
         <div className={`${styles['ani-item']}`}></div>
@@ -354,45 +393,59 @@ export default class extends Component {
     )
   }
 
+  callingDom () {
+    return (
+      <div className={`${baseStyles.pa} ${styles['calling-ani']}`}>
+        <div className={`${styles['calling-ani-item']}`}></div>
+        <div className={`${styles['calling-ani-item']}`}></div>
+        <div className={`${styles['calling-ani-item']}`}></div>
+      </div>
+    )
+  }
+	
+	getUserCardStyleByNum (len) {
+		let sty = ''
+		if (len > 4 && len <= 8) {
+			sty = 'medium'
+		} else if (len > 8) {
+			sty = 'small'
+		} else {
+			sty = 'normal'
+		}
+		return sty
+	}
+
 	selectedUsersDom () {
 		const {selectedUsers=[]} = this.props
-    const {sessionId, talkingUser, calledUsers, connectedMemberObj} = this.state
+    const {sessionId, talkingUser, calledUsers, connectedMemberObj, userCardSty} = this.state
     const users = calledUsers.length ? calledUsers : selectedUsers
-		console.log(11112121, talkingUser)
+		let sty = this.getUserCardStyleByNum(users.length)
 
 		return (
 			users.map( (user)=> {
 				return (
 							<li
 									key={user.usr_number + new Date().getTime()}
-									className={`${styles['selected-user-item']} ${baseStyles['m-box-border']}`}>
+									className={`${styles['selected-user-item']} ${styles[sty]} ${styles[userCardSty]} ${baseStyles['m-box-border']}`}>
 									<div className={`${styles['avatar-wrap']}`}>
 										<div className={`${styles['top-info']} ${baseStyles['flex']} ${baseStyles['align-center']}`}>
-                      {
-                        !sessionId ?
-                        <Icon type="close"
+
+                      { sessionId ?
+                        [<span className={`${styles['state-icon']} ${styles[connectedMemberObj && connectedMemberObj[user.usr_number] ? 'light': 'dark']}`}></span>,
+                        <div className={`${baseStyles.ft12} ${styles['user-state']}`}>
+                          {connectedMemberObj && connectedMemberObj[user.usr_number] ? '已接入' : '连接中'}
+                        </div>] : <Icon type="close"
                               className={`${baseStyles['pointer']}`}
                               onClick={this.removeSelectedUser.bind(this, user.usr_number)}
                         />
-                        : ''
-                      }
-
-                      { sessionId && connectedMemberObj ?
-                        [<span className={`${styles['state-icon']} ${styles[connectedMemberObj[user.usr_number] ? 'light': 'dark']}`}></span>,
-                        <div className={`${baseStyles.ft12} ${styles['user-state']}`}>
-                          {connectedMemberObj[user.usr_number] ? '已接入' : '连接中'}
-                        </div>] : ''
                       }
 										</div>
 										<img src="https://hbimg.huabanimg.com/2d431c924927b2968d26722f519ae7ed38094e36d192-34zNAY_fw658/format/webp"/>
 									</div>
 									<div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${styles['sub-info']}`}>
-										<span className={`${baseStyles['flex-item']} ${baseStyles['text-overflow']}`}>
-                      <div className={`${styles.name}`}>
-											  {user.usr_name}
-                      </div>
+										<span className={`${styles.name} ${baseStyles['flex-item']} ${baseStyles['text-overflow']}`}>
+											{user.usr_name}
 										</span>
-
                     {talkingUser && talkingUser.usr_number === user.usr_number ? this.talkingDom('talking-ani') : ''}
 									</div>
 							</li>
@@ -416,8 +469,9 @@ export default class extends Component {
      {
        callConnected ?
         (
-          <div className={`${styles['handler-item']} ${baseStyles['pr']}`}>
-            <div onClick={ptting ? this.stopPtt : this.sipCall} className={`${styles['ptt']} ${styles['handler-center']} ${styles['handler-item-circle']}`}>
+          <div className={`${styles['handler-item']} ${baseStyles['pr']}`}
+								onClick={ptting ? this.stopPtt : this.sipCall}>
+            <div className={`${styles['ptt']} ${styles['handler-center']} ${styles['handler-item-circle']}`}>
               <i className={`${iconfont['m-icon']} ${iconfont['icon-yuyin']} ${baseStyles['ft50']}`}></i>
             </div>
             <span className={styles['btn-text']}>PTT</span>
@@ -429,10 +483,12 @@ export default class extends Component {
         (
           <div className={`${styles['handler-item']}`}>
             <div id="create"
-                 className={`${styles['create']} ${styles['handler-center']} ${styles['handler-item-circle']}`}
+                 className={`${styles['create']} ${styles['handler-center']} ${styles['handler-item-circle']} ${baseStyles['pr']}`}
                  onClick={this.sipCall}
             >
               <i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft60']}`}></i>
+
+              {calling && this.callingDom()}
             </div>
             <span className={styles['btn-text']}>{calling ? '连接中...' : '创建'}</span>
           </div>
@@ -451,7 +507,7 @@ export default class extends Component {
 		const { height, selectedUsers } = this.props;
 		const { calling, talkingUser } = this.state
 		return (
-			<div className={`${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
+			<div className={`m-call-wrap ${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
 					style={{height: `${height}px`}}
 					>
 				<div className={styles.top}></div>
@@ -466,7 +522,7 @@ export default class extends Component {
 					>
 							{this.selectedUsersDom()}
 					</ul>
-					<div>
+          <div>
 						<div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-center']} ${styles['center-info']}`}>
 							{talkingUser ? `${talkingUser.usr_name}正在说话...` : ''}
 						</div>

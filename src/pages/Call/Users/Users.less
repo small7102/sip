@@ -1,23 +1,52 @@
 
 .list-wrap {
 	overflow: auto;
+	:global {	
+		.ant-input{
+			background: #16255b;
+		}
+	}
+}
+
+.pop{
+	:global{
+		.ant-popover-inner{
+			background: #111e4d;
+			box-shadow: 0 2px 8px rgba(255, 255, 255, .15);
+		}
+		.ant-popover-content > .ant-popover-arrow, .ant-popover-placement-bottomLeft > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-bottomRight > .ant-popover-content > .ant-popover-arrow{
+			border-top-color: #111e4d;
+  		border-left-color: #111e4d;
+		}
+	}
 }
 
 .user-item {
 	height: 60px;
 	line-height: 60px;
-	font-size: 18px;
+	font-size: 15px;
 	border-bottom: 1px solid rgba(174,213,246,.16);
 	&.offline {
-		color: rgba(255,255,255,.5);
+		.item-name {
+			color: rgba(255,255,255,.6);
+		}
+		.state {
+			color: rgba(255,255,255,.5);
+		}
 	}
 	&.online {
-		color: #3e9ff3
+		.item-name {
+			color: rgba(255,255,255);
+		}
+		.state {
+			color: #3e9ff3
+		}
 	}
 }
 .m-checkbox {
 		border: 1px solid #777fc6;
 }
+
 
 .more-btn {
 	font-size: 16px;
