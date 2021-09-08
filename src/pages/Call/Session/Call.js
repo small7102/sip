@@ -226,8 +226,8 @@ export default class extends Component {
 						this.removeSelectedUser(user.usr_number)
 					})
 					this.setState({
-						callConnected: false,
-						sessionId: null,
+						callConnected: false, 
+						sessionId: null, 
 						calling: false,
 						connectedMemberObj: null,
 						calledUsers: []
@@ -354,16 +354,6 @@ export default class extends Component {
     )
   }
 
-  callingDom () {
-    return (
-      <div className={`${baseStyles.pa} ${styles['calling-ani']}`}>
-        <div className={`${styles['calling-ani-item']}`}></div>
-        <div className={`${styles['calling-ani-item']}`}></div>
-        <div className={`${styles['calling-ani-item']}`}></div>
-      </div>
-    )
-  }
-
 	selectedUsersDom () {
 		const {selectedUsers=[]} = this.props
     const {sessionId, talkingUser, calledUsers, connectedMemberObj} = this.state
@@ -403,7 +393,6 @@ export default class extends Component {
                       </div>
 										</span>
 
-                    {/* {this.talkingDom('talking-ani')} */}
                     {talkingUser && talkingUser.usr_number === user.usr_number ? this.talkingDom('talking-ani') : ''}
 									</div>
 							</li>
@@ -440,12 +429,10 @@ export default class extends Component {
         (
           <div className={`${styles['handler-item']}`}>
             <div id="create"
-                 className={`${styles['create']} ${styles['handler-center']} ${styles['handler-item-circle']} ${baseStyles['pr']}`}
+                 className={`${styles['create']} ${styles['handler-center']} ${styles['handler-item-circle']}`}
                  onClick={this.sipCall}
             >
               <i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft60']}`}></i>
-
-              {calling && this.callingDom()}
             </div>
             <span className={styles['btn-text']}>{calling ? '连接中...' : '创建'}</span>
           </div>
@@ -479,15 +466,11 @@ export default class extends Component {
 					>
 							{this.selectedUsersDom()}
 					</ul>
-          {
-            talkingUser && (
-              <div>
-                <div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}>
-                  {talkingUser.usr_name}正在说话...
-                </div>
-              </div>
-            )
-          }
+					<div>
+						<div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-center']} ${styles['center-info']}`}>
+							{talkingUser ? `${talkingUser.usr_name}正在说话...` : ''}
+						</div>
+					</div>
 					{ selectedUsers.length ? this.createHandlers() : ''}
 				</div>
 			</div>
