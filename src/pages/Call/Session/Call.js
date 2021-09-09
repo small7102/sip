@@ -5,13 +5,14 @@ import baseStyles from '../assets/base.less'
 import { message, Icon } from 'antd';
 const ringbacktoneSrc = require('../assets/sounds/ringbacktone.wav')
 const ringtoneSrc = require('../assets/sounds/ringtone.wav')
-import {byteToString, arrToObjectBySmyble} from '../utils'
+import {byteToString, arrToObjectBySmyble, sendsFormat} from '../utils'
 
 
 let oSipStack = null
 let oSipSessionRegister = null
 let oSipSessionCall = null
 let oSipSessionMessage = null
+let timer = null
 
 export default class extends Component {
 
@@ -48,6 +49,8 @@ export default class extends Component {
 		sessionId: null,
 		userCardSty: '',
     calledUsers: [],//已经创建呼叫的成员
+		netInfoObj: {},
+		duration: 0,
 		loginConfig: {
 			enable_early_ims: true,
 			enable_media_stream_cache: false,
@@ -71,7 +74,6 @@ export default class extends Component {
   }
 
 	onSipEventStack (e) {
-		console.log(e.type, 111)
 		switch (e.type) {
 			case 'started':
 				{
@@ -122,7 +124,14 @@ export default class extends Component {
 					break;
 				}
 				case 'i_new_message': {
-					console.log(e, 'messsage')
+					// console.log(e.content, 'messsage')
+					let netInfoObj = {...this.state.netInfoObj}
+					let content = e.content || []
+					let netInfo = JSON.parse(byteToString(content))
+					netInfoObj[netInfo.exten] = netInfo
+
+					console.log(netInfo, netInfoObj, 123456)
+					this.setState({netInfoObj})
 					break;
 				}
 				default: break;
@@ -145,8 +154,6 @@ export default class extends Component {
 				let bConnected = (type == 'connected');
 				if (session == oSipSessionRegister) { // 注册登录成功
 					this.setState({sipAvalible: true})
-					// console.log(this.state.sipAvalible,)
-
 				} else if (session == oSipSessionCall) {
 
 				}
@@ -186,17 +193,20 @@ export default class extends Component {
             if (state) {
               infoUser = selectedUsers.find(item => item.usr_number === cbInfo.number)
             }
-						console.log(connectedMemberObj, cbInfo, action, 1254545)
 						if (state == 'add') {
 							let obj = connectedMemberObj ? {...connectedMemberObj} : {}
 							// 有人加进会话
 							obj[cbInfo.number] = cbInfo
               this.mMessage('info',`${infoUser.usr_name}接入会话`)
 
-							this.setState({callConnected: true,
-														 calling: false,
-														 connectedMemberObj: obj
-														})
+							
+							this.setState({
+								callConnected: true,
+								calling: false,
+								connectedMemberObj: obj,
+							})
+
+							this.countTime()
 						} else if (state == 'talking') {
 							// count: "2"
 							// level: "1"
@@ -245,17 +255,18 @@ export default class extends Component {
 				}
 				else if (session == oSipSessionCall) {
 					this.mMessage('error','呼叫终止')
-					selectedUsers.forEach(user => {
-						this.removeSelectedUser(user.usr_number)
-					})
+					this.removeSelectedUser()
 					this.setState({
 						callConnected: false,
 						sessionId: null,
 						calling: false,
 						connectedMemberObj: null,
-						calledUsers: []
+						calledUsers: [],
+						duration: 0
 					})
 					oSipSessionCall = null;
+					// 清除计时器
+					clearInterval(timer)
 				}
 				break;
 			}
@@ -322,19 +333,36 @@ export default class extends Component {
 	}
 
   hangUp () {
-    oSipSessionCall && oSipSessionCall.hangup({
-      events_listener: {
-        events: '*',
-        listener: (e)=> {
-          this.onSipEventSession(e)
-        }
-      }
-    })
+		if (oSipSessionCall) {
+			oSipSessionCall.hangup({
+				events_listener: {
+					events: '*',
+					listener: (e)=> {
+						this.onSipEventSession(e)
+					}
+				}
+			})
+		} else {
+			this.removeSelectedUser()
+		}
   }
 
   removeSelectedUser (id) {
     this.props.removeSelectedUser(id)
   }
+
+	countTime () {
+		let {duration} = this.state
+		if (!timer) {
+			timer = setInterval(()=> {
+				duration++
+				this.setState({duration})
+			}, 1000) 
+		} else {
+			clearInterval(timer)
+			timer = null
+		}
+	}
 
 	componentWillMount () {
 		const {account} = this.props
@@ -415,6 +443,69 @@ export default class extends Component {
 		return sty
 	}
 
+	formatDuration () {
+		const {duration} = this.state
+		return sendsFormat(duration)
+	}
+
+	batteryDom (id) {
+		const {netInfoObj} = this.state
+		
+		return (
+			netInfoObj[id] && 
+			<div className={`${styles['battery-wrap']} ${baseStyles['flex']} ${baseStyles['align-center']}`}>
+				<span className={styles.val}>{netInfoObj[id].battery + '%'}</span>
+				<div className={styles['left']}></div>
+				<div className={`${styles['right']} ${baseStyles['pr']}`}>
+					<div 
+						className={styles.battery}
+						style={{width: netInfoObj[id].battery + '%'}}
+					>
+					</div>
+				</div>
+			</div>
+		)
+	}
+
+	signalDom (id) {
+		const {netInfoObj} = this.state
+		const netInfo = netInfoObj[id]
+
+		if (!netInfo) return
+
+		const {netLevel=0, netType='0'} = netInfo
+		return (
+			netType != '0' ? 
+			(<div className={`${styles['signal-wrap']} ${baseStyles['flex']}`}>
+				<div className={styles['signal-item']}
+						style={{opacity: parseInt(netLevel) > 0 ? 1 : .4}}
+				></div>
+				<div className={styles['signal-item']}
+						style={{opacity: parseInt(netLevel) > 1 ? 1 : .4}}
+				></div>
+				<div className={styles['signal-item']}
+						style={{opacity: parseInt(netLevel) > 2 ? 1 : .4}}
+				></div>
+				<div className={styles['signal-item']}
+						style={{opacity: parseInt(netLevel) > 3 ? 1 : .4}}
+				></div>
+			</div>) : 
+			(
+				<div className={`${styles['wifi-wrap']} ${baseStyles['pr']}`}>
+					<i className={`${styles['wifi-icon']} ${iconfont['m-icon']} ${iconfont['icon-wifi-outline']}`}></i>
+					<div 
+						className={styles.current}
+						style={{height: `${(netLevel-1)*4 || 2}px`}}
+					>
+						<i className={`${styles['inner-icon']} ${baseStyles['pa']} ${iconfont['m-icon']} ${iconfont['icon-wifi-outline']}`}
+							style={{bottom: '-8px'}}
+						></i>
+					</div>
+				</div>
+			)
+		)
+	}
+
 	selectedUsersDom () {
 		const {selectedUsers=[]} = this.props
     const {sessionId, talkingUser, calledUsers, connectedMemberObj, userCardSty} = this.state
@@ -439,6 +530,12 @@ export default class extends Component {
                               onClick={this.removeSelectedUser.bind(this, user.usr_number)}
                         />
                       }
+											{
+												this.batteryDom(user.usr_number)
+											}
+											{
+												this.signalDom(user.usr_number)
+											}
 										</div>
 										<img src="https://hbimg.huabanimg.com/2d431c924927b2968d26722f519ae7ed38094e36d192-34zNAY_fw658/format/webp"/>
 									</div>
@@ -505,7 +602,7 @@ export default class extends Component {
 
 	render () {
 		const { height, selectedUsers } = this.props;
-		const { calling, talkingUser } = this.state
+		const { calling, talkingUser, duration } = this.state
 		return (
 			<div className={`m-call-wrap ${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
 					style={{height: `${height}px`}}
@@ -523,6 +620,9 @@ export default class extends Component {
 							{this.selectedUsersDom()}
 					</ul>
           <div>
+						<div className={`${styles.timer} ${baseStyles['ft40']} ${baseStyles['flex']} ${baseStyles['justify-center']}`}>
+							{duration ? this.formatDuration() : ''}
+						</div>
 						<div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-center']} ${styles['center-info']}`}>
 							{talkingUser ? `${talkingUser.usr_name}正在说话...` : ''}
 						</div>

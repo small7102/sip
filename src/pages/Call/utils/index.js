@@ -35,3 +35,16 @@ export function arrToObjectBySmyble(arr, syb = '=') {
 
 	return obj
 }
+
+function addZore (num) {
+	return num > 9 ? num : '0'+num
+}
+
+export function sendsFormat (seconds) {
+	let h=0,m=0,s=0
+	h= Math.floor(seconds / 3600)
+	m = Math.floor(seconds / 60)
+	m = h ? m % 60 : m
+	s= seconds % 60
+	return `${addZore(h)}:${addZore(m)}:${addZore(s)}`
+}

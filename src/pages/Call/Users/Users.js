@@ -10,6 +10,7 @@ class Users extends Component {
 	constructor (props) {
 		super(props)
 		this.onSelectedUsersChange = this.onSelectedUsersChange.bind(this)
+		this.handleSelectSearchItem = this.handleSelectSearchItem.bind(this)
 	}
 	state = {
 		selectedUserIds: [],
@@ -68,7 +69,7 @@ class Users extends Component {
 
   removeUserById (id) {
     const {selectedUserIds} = this.state
-    const _selectedUserIds = selectedUserIds.filter(item => item != id)
+    const _selectedUserIds = id ? selectedUserIds.filter(item => item != id) : []
     this.setState({selectedUserIds: _selectedUserIds})
   }
 
@@ -92,6 +93,19 @@ class Users extends Component {
 		})
 	}
 
+	handleSelectSearchItem (user) {
+		const {users} = this.props
+		const {selectedUserIds} = this.state
+		let ids = [...selectedUserIds]
+		ids.unshift(user.usr_number)
+		this.onSelectedUsersChange(ids)
+
+		// 找出当前成员在列表中的位置
+		let index = users.findIndex(item => item.usr_number == user.usr_number)
+		console.log(index, (index+1)*60, selectedUserIds)
+		this.setState({inpVal: ''})
+	}
+
   componentDidMount(){
       this.props.onRef(this)
   }
@@ -99,12 +113,14 @@ class Users extends Component {
 	seachResultDom () {
 		const {searchList} = this.state
 
-		console.log(searchList, 123)
 		return searchList.map((item, index) => {
 			return (
 				<div
 					key={index}
-					className={`${baseStyles['m-item']} ${styles['user-item']}`}
+					className={`${baseStyles['m-item']} ${styles['search-item']}`}
+					onClick={() => {
+						this.handleSelectSearchItem(item)
+					}}
 				>
 					{item.usr_name}
 				</div>
@@ -119,15 +135,13 @@ class Users extends Component {
 			<Popover
 				placement="bottom"
 				trigger="focus"
-				visible = {true}
 				overlayClassName={styles.pop}
 				style={{width: `${width}px`, backgroundColor: '#16255b'}}
 				content={
 					<div className={baseStyles['scroll-bar']}
-							style={{ width: `${width-40}px`, backgroundColor: '#16255b', maxHeight: '500px'}}>
-						{
-							this.seachResultDom()
-						}
+							style={{ width: `${width-40}px`, maxHeight: '500px'}}>
+						<div className={styles['result-title']}>搜索结果：</div>
+						{	this.seachResultDom() }
 					</div>
 				}
 			>
@@ -155,11 +169,15 @@ class Users extends Component {
 				content={
 					<div className="m-users-wrap">
 						{this.searchDom()}
-						<Checkbox.Group className={`${baseStyles['w100']}`}
-                            value={selectedUserIds}
-														onChange={this.onSelectedUsersChange}
+						<Checkbox.Group 
+							className={`${baseStyles['w100']}`}
+							value={selectedUserIds}
+							onChange={this.onSelectedUsersChange}
 						>
-							<ul className={`${styles['list-wrap']} ${baseStyles['scroll-bar']}`} style={{height: `${height-100}px`}}>
+							<ul 
+								className={`${styles['list-wrap']} ${baseStyles['scroll-bar']}`} style={{height: `${height-100}px`}}
+								ref="userRef"
+							>
 								{this.listDom()}
 							</ul>
 						</Checkbox.Group>

@@ -57,9 +57,9 @@ class SipCall extends Component {
 
   removeSelectedUser = (usr_number) => {
     const {selectedUsers, userRef} = this.state
-    const _selectedUsers = selectedUsers.filter(user => {
+    const _selectedUsers = usr_number ? selectedUsers.filter(user => {
 			return user.usr_number != usr_number
-		})
+		}) : []
 
     this.setState({selectedUsers: _selectedUsers})
     userRef.removeUserById(usr_number)

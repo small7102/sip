@@ -901,7 +901,9 @@ SIPml.Stack = function (o_conf) {
             if (s_type == 'i_new_message') {
                 var oNewEvent = new SIPml.Stack.Event(s_type, e);
                 oNewEvent.newSession = new SIPml.Session.Message(e.o_session);
-                e.o_session.o_stack.oStack.ao_sessions[i_session_id] = oNewEvent.newSession; // save session
+
+                oNewEvent.content = e.o_message && e.o_message.o_content || []
+                e.o_session.o_stack.oStack.ao_sessions[i_session_id] = oNewEvent.newSession; // save session 
                 e.o_session.o_stack.oStack.dispatchEvent({ s_type: s_type, o_value: oNewEvent });
             }
             else {
