@@ -24,31 +24,22 @@
   color: #fff;
 }
 .call-wrap .selected-user-wrap {
-  width: 80%;
-  max-width: 700px;
-  margin: 80px auto;
+  width: 90%;
+  margin: 60px auto;
   flex-wrap: wrap;
-  max-height: 70%;
+  max-height: 75%;
 }
 .call-wrap .selected-user-item {
-  height: 230px;
-  width: 180px;
   background: #183473;
   border-radius: 12px;
   display: inline-block;
   overflow: hidden;
   margin: 10px;
 }
-.call-wrap .selected-user-item .avatar-wrap {
-  height: 180px;
-  width: 180px;
-  overflow: hidden;
-  position: relative;
-}
 .call-wrap .selected-user-item img {
   width: 100%;
 }
-.call-wrap .selected-user-item .top-info {
+.call-wrap .top-info {
   position: absolute;
   top: 0;
   left: 0;
@@ -57,32 +48,67 @@
   background-color: rgba(0, 0, 0, 0.4);
   padding: 3px 10px;
 }
-.call-wrap .selected-user-item .sub-info {
+.call-wrap .sub-info {
   padding: 0 10px;
 }
-.call-wrap .selected-user-item .name {
+.call-wrap .name {
   font-size: 15px;
   color: #fff;
   line-height: 40px;
 }
-.call-wrap .selected-user-item .user-state {
+.call-wrap .user-state {
   color: rgba(255, 255, 255, 0.8);
 }
-.call-wrap .selected-user-item .state-icon {
+.call-wrap .state-icon {
   height: 13px;
   width: 13px;
   border-radius: 100%;
   margin: 0 3px;
   display: inline-block;
 }
-.call-wrap .selected-user-item .state-icon.light {
+.call-wrap .state-icon.light {
   background-color: #31e131;
 }
-.call-wrap .selected-user-item .state-icon.dark {
+.call-wrap .state-icon.dark {
   background-color: #c9d3c9;
 }
+.call-wrap .avatar-wrap {
+  overflow: hidden;
+  position: relative;
+}
+.call-wrap .normal {
+  height: 230px;
+  width: 180px;
+}
+.call-wrap .normal .avatar-wrap {
+  width: 180px;
+  height: 180px;
+}
+.call-wrap .medium {
+  height: 180px;
+  width: 140px;
+}
+.call-wrap .medium .avatar-wrap {
+  width: 140px;
+  height: 140px;
+}
+.call-wrap .small {
+  height: 150px;
+  width: 120px;
+}
+.call-wrap .small .avatar-wrap {
+  width: 120px;
+  height: 120px;
+}
+.call-wrap .small .top-info {
+  height: 30px;
+}
+.call-wrap .small .name {
+  font-size: 13px;
+  line-height: 30px;
+}
 .call-wrap .handlers {
-  margin: 80px;
+  margin: 55px 80px;
 }
 .call-wrap .handler-item .handler-item-circle {
   border-radius: 100%;
@@ -203,6 +229,75 @@
   height: 10px;
   width: 10px;
 }
+.call-wrap .center-info {
+  height: 30px;
+}
+.call-wrap .battery-wrap {
+  margin-left: auto;
+}
+.call-wrap .battery-wrap .val {
+  font-size: 12px;
+  transform: scale(0.9);
+}
+.call-wrap .battery-wrap .left {
+  width: 2px;
+  height: 6px;
+  background: #fff;
+  margin-left: 2px;
+}
+.call-wrap .battery-wrap .right {
+  width: 20px;
+  height: 12px;
+  border: 1px solid #fff;
+  border-radius: 2px;
+}
+.call-wrap .battery-wrap .battery {
+  position: absolute;
+  height: 10px;
+  top: 0;
+  right: 0;
+  background: #1b9e4c;
+}
+.call-wrap .signal-wrap {
+  align-items: baseline;
+  margin-left: 5px;
+  transform: scale(0.8);
+}
+.call-wrap .signal-wrap .signal-item {
+  width: 2px;
+  height: 18px;
+  background: #fff;
+  margin-left: 3px;
+}
+.call-wrap .signal-wrap .signal-item:nth-child(1) {
+  height: 6px;
+}
+.call-wrap .signal-wrap .signal-item:nth-child(2) {
+  height: 10px;
+}
+.call-wrap .signal-wrap .signal-item:nth-child(3) {
+  height: 14px;
+}
+.call-wrap .wifi-wrap {
+  height: 18px;
+  width: 18px;
+  margin-top: -5px;
+}
+.call-wrap .wifi-wrap .wifi-icon {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+.call-wrap .wifi-wrap .current {
+  overflow: hidden;
+  bottom: 0;
+  left: 0;
+  width: 24px;
+  position: absolute;
+}
+.call-wrap .wifi-wrap .inner-icon {
+  bottom: -8px;
+  left: 0;
+  font-size: 18px;
+}
 @keyframes pttAni {
   from {
     transform: scaleY(0.2);
@@ -223,20 +318,86 @@
   .call-wrap .selected-user-wrap {
     max-height: 80%;
   }
-  .call-wrap .selected-user-item {
-    height: 200px;
-    width: 160px;
-    background: #183473;
-    border-radius: 12px;
-    display: inline-block;
-    overflow: hidden;
-    margin: 10px;
+  .call-wrap .small {
+    height: 136px;
+    width: 120px;
   }
-  .call-wrap .selected-user-item .avatar-wrap {
+  .call-wrap .small .avatar-wrap {
+    width: 120px;
+    height: 120px;
+  }
+  .call-wrap .small .top-info {
+    height: 25px;
+  }
+  .call-wrap .small .name {
+    line-height: 30px;
+    font-size: 13px;
+  }
+  .call-wrap .normal {
+    height: 180px;
+    width: 140px;
+  }
+  .call-wrap .normal .avatar-wrap {
+    width: 140px;
+    height: 140px;
+  }
+  .call-wrap .medium {
     height: 160px;
-    width: 160px;
-    overflow: hidden;
-    position: relative;
+    width: 125px;
   }
+  .call-wrap .medium .avatar-wrap {
+    width: 125px;
+    height: 125px;
+  }
+  .call-wrap .medium .top-info {
+    height: 25px;
+  }
+  .call-wrap .medium .name {
+    line-height: 30px;
+    font-size: 13px;
+  }
+}
+.modal :global .ant-modal-content,
+.modal :global .ant-modal-header {
+  background: #16255b;
+}
+.modal :global .ant-modal-title {
+  color: #fff;
+}
+.modal :global .ant-input {
+  background: #16255b;
+  border: 1px solid #7f89e2;
+}
+.modal :global .ant-modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.modal :global .ant-modal-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.modal :global .ant-btn {
+  border-color: rgba(255, 255, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.modal :global .ant-btn-primary {
+  border-color: #1890FF;
+  background-color: #1890FF;
+}
+.modal :global .ant-btn-primary-disabled,
+.modal :global .ant-btn-primary.disabled,
+.modal :global .ant-btn-primary[disabled],
+.modal :global .ant-btn-primary-disabled:hover,
+.modal :global .ant-btn-primary.disabled:hover,
+.modal :global .ant-btn-primary[disabled]:hover,
+.modal :global .ant-btn-primary-disabled:focus,
+.modal :global .ant-btn-primary.disabled:focus,
+.modal :global .ant-btn-primary[disabled]:focus,
+.modal :global .ant-btn-primary-disabled:active,
+.modal :global .ant-btn-primary.disabled:active,
+.modal :global .ant-btn-primary[disabled]:active,
+.modal :global .ant-btn-primary-disabled.active,
+.modal :global .ant-btn-primary.disabled.active,
+.modal :global .ant-btn-primary[disabled].active {
+  background-color: #f5f5f5;
+  border-color: #d9d9d9;
 }
 /*# sourceMappingURL=./Call.css.map */

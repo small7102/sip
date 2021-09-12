@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import iconfont from '../assets/iconfont.less'
 import styles from './Call.less';
 import baseStyles from '../assets/base.less'
-import { message, Icon } from 'antd';
+import { message, Icon, Modal, Button, Input, Form } from 'antd';
 const ringbacktoneSrc = require('../assets/sounds/ringbacktone.wav')
 const ringtoneSrc = require('../assets/sounds/ringtone.wav')
 import {byteToString, arrToObjectBySmyble, sendsFormat} from '../utils'
-
+import Storage from '../utils/localStore'
 
 let oSipStack = null
 let oSipSessionRegister = null
@@ -21,16 +21,19 @@ export default class extends Component {
 		this.sipCall = this.sipCall.bind(this)
 		this.stopPtt = this.stopPtt.bind(this)
 		this.hangUp = this.hangUp.bind(this)
+		this.handleSave = this.handleSave.bind(this)
+		this.handleOk = this.handleOk.bind(this)
+		this.handleCancel = this.handleCancel.bind(this)
+		this.changeInpVal = this.changeInpVal.bind(this)
 		this.removeSelectedUser = this.removeSelectedUser.bind(this)
 	}
 	state = {
 		sipAvalible: false,
 		audioRemote: null,
 		ringbackTone: null,
-		oSipStack: null,
-		oSipSessionRegister: null,
-		oSipSessionCall: null,
     netNormal: true,
+    modalVisible: false,
+    inpVal: '',
 		oConfigCall: {
 			bandwidth: { audio: undefined, video: undefined },
 			events_listener: { events: '*', listener: (e) => {
@@ -119,7 +122,8 @@ export default class extends Component {
 					if (oSipSessionCall) {
 						e.newSession.hangup()
 					} else {
-						oSipSessionCall.setConfiguration(this.state.oConfigCall);
+            oSipSessionCall = e.newSession;
+						oSipSessionCall&&oSipSessionCall.setConfiguration(this.state.oConfigCall);
 					}
 					break;
 				}
@@ -199,7 +203,7 @@ export default class extends Component {
 							obj[cbInfo.number] = cbInfo
               this.mMessage('info',`${infoUser.usr_name}接入会话`)
 
-							
+
 							this.setState({
 								callConnected: true,
 								calling: false,
@@ -357,12 +361,45 @@ export default class extends Component {
 			timer = setInterval(()=> {
 				duration++
 				this.setState({duration})
-			}, 1000) 
+			}, 1000)
 		} else {
 			clearInterval(timer)
 			timer = null
 		}
 	}
+
+  handleSave () {
+    this.setState({modalVisible: true})
+  }
+
+  handleOk () {
+    const {usernumber} = this.props.account
+    const {selectedUsers, inpVal} = this.state
+
+    let tempGroups = Storage.localGet(`${usernumber}tempgroup`) || []
+    tempGroups.unshift(JSON.stringify({
+      name: inpVal,
+      users: selectedUsers
+    }))
+
+    tempGroups = tempGroups.splice(0,50)
+
+    Storage.localSet(`${usernumber}tempgroup`, tempGroups)
+    this.setState({modalVisible: false, inpVal: ''})
+    this.mMessage('success', '保存成功')
+
+    this.props.saveTempgroup()
+  }
+
+  handleCancel () {
+    this.setState({modalVisible: false, inpVal: false})
+  }
+
+  changeInpVal (e) {
+    this.setState({
+      inpVal: e.target.value
+    })
+  }
 
 	componentWillMount () {
 		const {account} = this.props
@@ -384,6 +421,8 @@ export default class extends Component {
 	}
 
 	componentDidMount () {
+    this.props.onRef(this)
+
 		let audioRemote = document.getElementById('audio_remote')
 
 		const { loginConfig, oConfigCall } = this.state
@@ -393,20 +432,19 @@ export default class extends Component {
 			oConfigCall: {...oConfigCall, audio_remote: audioRemote}
 		})
 
-		setTimeout(() => {
-			if (!oSipStack) {
-				oSipStack = new SIPml.Stack(loginConfig)
-
-				oSipStack.start()
-			}
-    }, 2000)
-
-
     message.config({
       top: (height+140)/2 - 20,
       duration: 3,
     });
 	}
+
+  newSip () {
+    const { loginConfig } = this.state
+    if (!oSipStack) {
+      oSipStack = new SIPml.Stack(loginConfig)
+      oSipStack.start()
+    }
+  }
 
   talkingDom (className) {
     return(
@@ -430,7 +468,7 @@ export default class extends Component {
       </div>
     )
   }
-	
+
 	getUserCardStyleByNum (len) {
 		let sty = ''
 		if (len > 4 && len <= 8) {
@@ -450,14 +488,14 @@ export default class extends Component {
 
 	batteryDom (id) {
 		const {netInfoObj} = this.state
-		
+
 		return (
-			netInfoObj[id] && 
+			netInfoObj[id] &&
 			<div className={`${styles['battery-wrap']} ${baseStyles['flex']} ${baseStyles['align-center']}`}>
 				<span className={styles.val}>{netInfoObj[id].battery + '%'}</span>
 				<div className={styles['left']}></div>
 				<div className={`${styles['right']} ${baseStyles['pr']}`}>
-					<div 
+					<div
 						className={styles.battery}
 						style={{width: netInfoObj[id].battery + '%'}}
 					>
@@ -475,7 +513,7 @@ export default class extends Component {
 
 		const {netLevel=0, netType='0'} = netInfo
 		return (
-			netType != '0' ? 
+			netType != '0' ?
 			(<div className={`${styles['signal-wrap']} ${baseStyles['flex']}`}>
 				<div className={styles['signal-item']}
 						style={{opacity: parseInt(netLevel) > 0 ? 1 : .4}}
@@ -489,11 +527,11 @@ export default class extends Component {
 				<div className={styles['signal-item']}
 						style={{opacity: parseInt(netLevel) > 3 ? 1 : .4}}
 				></div>
-			</div>) : 
+			</div>) :
 			(
 				<div className={`${styles['wifi-wrap']} ${baseStyles['pr']}`}>
 					<i className={`${styles['wifi-icon']} ${iconfont['m-icon']} ${iconfont['icon-wifi-outline']}`}></i>
-					<div 
+					<div
 						className={styles.current}
 						style={{height: `${(netLevel-1)*4 || 2}px`}}
 					>
@@ -591,7 +629,10 @@ export default class extends Component {
           </div>
         )
      }
-     <div className={`${styles['handler-item']}`}>
+     <div
+        className={`${styles['handler-item']}`}
+        onClick={this.handleSave}
+     >
        <div className={`${styles['save']} ${styles['handler-between']} ${styles['handler-item-circle']}`}>
          <i className={`${iconfont['m-icon']} ${iconfont['icon-bianji']} ${baseStyles['ft30']}`}></i>
        </div>
@@ -601,8 +642,9 @@ export default class extends Component {
  )};
 
 	render () {
-		const { height, selectedUsers } = this.props;
-		const { calling, talkingUser, duration } = this.state
+    const { height, selectedUsers } = this.props;
+		const { calling, talkingUser, duration, modalVisible, inpVal} = this.state
+
 		return (
 			<div className={`m-call-wrap ${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
 					style={{height: `${height}px`}}
@@ -629,6 +671,40 @@ export default class extends Component {
 					</div>
 					{ selectedUsers.length ? this.createHandlers() : ''}
 				</div>
+
+        <Modal
+          title="保存临时群组"
+          visible={modalVisible}
+          className={styles.modal}
+          footer={null}
+        >
+          <Input
+            size="large"
+            value={inpVal}
+            placeholder="输入名称"
+            onChange={
+              (e) => {
+                this.changeInpVal(e)
+              }
+            }
+          />
+
+          <div className={`${baseStyles.flex} ${baseStyles['mt10']}`}>
+            <Button
+              style={{margin: '0 10px 0 auto'}}
+              onClick = {this.handleCancel}
+            >
+              取消
+            </Button>
+            <Button
+              type="primary"
+              disabled={!inpVal}
+              onClick = {this.handleOk}
+            >
+              确定
+            </Button>
+          </div>
+        </Modal>
 			</div>
 		)
 	}

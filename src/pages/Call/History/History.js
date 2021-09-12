@@ -26,12 +26,13 @@ const History = (props) => {
         <div className={styles['name']}>{item.name}</div>
         <div className={styles['sub-info']}>{item.time}  {item.type}</div>
       </div>
-      <Icon type="right" />	
+      <Icon type="right" />
     </div>)
   })
 	return (
 		<Box
 			title="历史通话记录"
+      icon="icon-dianhua"
 			height={(height)}
 			width={width}
 			content={

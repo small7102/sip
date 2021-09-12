@@ -7,6 +7,9 @@ import History from '../History/History'
 import Tempgroups from '../Tempgroups/tempgroups';
 import { connect } from 'dva';
 const QUERY_ONLINE_DURATION = 120000
+let loadedAsset = false
+let loadTimer = null
+let a = 0
 
 export default
 @connect(({ sipUsers, loading }) => {
@@ -20,6 +23,7 @@ class SipCall extends Component {
 	constructor (props) {
 		super(props)
 		this.getSelectedUsers = this.getSelectedUsers.bind(this)
+    this.saveTempgroup = this.saveTempgroup.bind(this)
 	}
   componentWillMount(){
     this.loadSipAssets()
@@ -32,10 +36,29 @@ class SipCall extends Component {
 		socket_url: 'wss://183.47.46.242:7443',
 		selectedUserIds: [],
 		selectedUsers: [],
-    userRef: null
+    userRef: null,
+    callRef: null,
+    tempgroupRef: null,
+    loadedAsset: false
 	}
 
 	loadSipAssets() {
+    const rawHeadAppendChild = HTMLHeadElement.prototype.appendChild
+
+    HTMLHeadElement.prototype.appendChild = function (child) {
+      if(child.src.indexOf('/src/tiny')> -1) a++
+      if(child.src.indexOf('/SIPml.js')> -1) a++
+      // console.log('我要加入了', a)
+      if (a>=97) {
+        child.addEventListener('load', () => {
+          setTimeout(()=> {
+            loadedAsset = true
+          },1000)
+        })
+      }
+      return rawHeadAppendChild.call(this, child)
+    }
+
 		let tag_hdr = document.getElementsByTagName('head')[0];
 		['/SIPml.js', '/src/tinySIP/src/tsip_api.js'].forEach(src => {
 			let tag_script = document.createElement('script');
@@ -62,14 +85,14 @@ class SipCall extends Component {
 		}) : []
 
     this.setState({selectedUsers: _selectedUsers})
-    userRef.removeUserById(usr_number)
+    userRef && userRef.removeUserById(usr_number)
   }
 
 	usersOfUpMyself () {
 		const {sipUsers} = this.props
 		const {usernumber} = this.state
 		let users = [...sipUsers.users], myself
-		
+
 		users = users.filter(user => {
 			if (user.usr_number !== usernumber) {
 				return true
@@ -78,13 +101,26 @@ class SipCall extends Component {
 				return false
 			}
 		})
-		
+
 		myself && users.unshift(myself)
 		return users
 	}
 
+  saveTempgroup () {
+    const {tempgroupRef} = this.state
+    tempgroupRef && tempgroupRef.getLocalData()
+    // console.log(this.state, 0000)
+  }
+
   onRef= (ref)=> {
     this.setState({userRef: ref})
+  }
+  onTempGroupRef= (ref)=> {
+    this.setState({tempgroupRef: ref})
+  }
+
+  onCallRef = (ref) => {
+    this.setState({callRef: ref})
   }
 
 	componentDidMount () {
@@ -124,6 +160,14 @@ class SipCall extends Component {
 				width: document.body.clientWidth
 			})
 		})
+
+    loadTimer = setInterval(() => {
+      if (loadedAsset) {
+        this.state.callRef.newSip()
+        clearInterval()
+        loadTimer=null
+      }
+    }, 1000)
 	}
 
 	render () {
@@ -148,13 +192,21 @@ class SipCall extends Component {
 				<Call height={height-140}
 							selectedUsers={selectedUsers}
               removeSelectedUser={this.removeSelectedUser}
+              saveTempgroup={this.saveTempgroup}
 							account={{usernumber, pwd, socket_url}}
+              onRef={this.onCallRef}
 				/>
 				<div
 					className={`${styles['right-wrap']}`}
 				>
 					<History height={height - 450} width={width > 1500 ? 360 : 300}></History>
-					<Tempgroups height={290} width={width > 1500 ? 360 : 300}></Tempgroups>
+					<Tempgroups
+            height={290}
+            width={width > 1500 ? 360 : 300}
+            onTempGroupRef={this.onTempGroupRef}
+            usernumber={usernumber}
+          >
+            </Tempgroups>
 				</div>
 			</div>
 		)

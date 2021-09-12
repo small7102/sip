@@ -48,3 +48,4 @@ export function sendsFormat (seconds) {
 	s= seconds % 60
 	return `${addZore(h)}:${addZore(m)}:${addZore(s)}`
 }
+

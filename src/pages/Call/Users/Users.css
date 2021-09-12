@@ -1,0 +1,56 @@
+.list-wrap {
+  overflow: auto;
+}
+.list-wrap :global .ant-input {
+  background: #16255b;
+  border: 1px solid #7f89e2;
+}
+.pop :global .ant-popover-inner {
+  background: #111e4d;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+}
+.pop :global .ant-popover-content > .ant-popover-arrow,
+.pop :global .ant-popover-placement-bottomLeft > .ant-popover-content > .ant-popover-arrow,
+.pop :global .ant-popover-placement-bottomRight > .ant-popover-content > .ant-popover-arrow {
+  border-top-color: #111e4d;
+  border-left-color: #111e4d;
+}
+.user-item {
+  height: 60px;
+  line-height: 60px;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(174, 213, 246, 0.16);
+}
+.user-item.offline .item-name {
+  color: rgba(255, 255, 255, 0.6);
+}
+.user-item.offline .state {
+  color: rgba(255, 255, 255, 0.5);
+}
+.user-item.online .item-name {
+  color: rgba(255, 255, 255);
+}
+.user-item.online .state {
+  color: #3e9ff3;
+}
+.search-item {
+  height: 40px;
+  line-height: 40px;
+  border-bottom: 1px solid rgba(174, 213, 246, 0.16);
+}
+.m-checkbox {
+  border: 1px solid #777fc6;
+}
+.more-btn {
+  font-size: 16px;
+  height: 24px;
+  width: 24px;
+  line-height: 24px;
+  border-radius: 100%;
+  margin-left: 10px;
+  cursor: pointer;
+}
+.more-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+/*# sourceMappingURL=./Users.css.map */

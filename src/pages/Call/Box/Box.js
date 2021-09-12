@@ -8,7 +8,8 @@ const Box = (props) => {
 		content,
 		height,
 		width,
-		title
+		title,
+    icon="icon-tongxunlu"
 	} = props
 	return(
 		<div
@@ -18,7 +19,7 @@ const Box = (props) => {
 		>
         <span className={`${styles['box-outline']}`}></span>
 				<h3 className={styles.title}>
-					<i className={`${iconfont['m-icon']} ${iconfont['icon-tongxunlu']}`}></i>
+					<i className={`${iconfont['m-icon']} ${iconfont[icon]}`}></i>
 					{title}
 				</h3>
 				{content}

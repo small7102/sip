@@ -77,7 +77,7 @@ class Users extends Component {
 		const {users} = this.props
 		let val = e.target.value.toLowerCase()
 		this.setState({inpVal: val})
-		
+
 		if (!val) {
 			this.setState({
 				searchList: []
@@ -138,14 +138,15 @@ class Users extends Component {
 				overlayClassName={styles.pop}
 				style={{width: `${width}px`, backgroundColor: '#16255b'}}
 				content={
-					<div className={baseStyles['scroll-bar']}
+					<div
+              className={baseStyles['scroll-bar']}
 							style={{ width: `${width-40}px`, maxHeight: '500px'}}>
-						<div className={styles['result-title']}>搜索结果：</div>
-						{	this.seachResultDom() }
+              <div className={styles['result-title']}>搜索结果：</div>
+              {	this.seachResultDom() }
 					</div>
 				}
 			>
-				<Input 
+				<Input
 					placeholder="输入名称"
 					size="large"
 					prefix={<Icon type="search" style={{ color: 'rgba(255,255,255,.8)' }} />}
@@ -169,12 +170,12 @@ class Users extends Component {
 				content={
 					<div className="m-users-wrap">
 						{this.searchDom()}
-						<Checkbox.Group 
+						<Checkbox.Group
 							className={`${baseStyles['w100']}`}
 							value={selectedUserIds}
 							onChange={this.onSelectedUsersChange}
 						>
-							<ul 
+							<ul
 								className={`${styles['list-wrap']} ${baseStyles['scroll-bar']}`} style={{height: `${height-100}px`}}
 								ref="userRef"
 							>
