@@ -218,9 +218,7 @@ export default class extends Component {
 							// pttid: "10010023"
 							// state: "talking
               this.setState({
-                talkingUser: {
-                  ...infoUser
-                }
+                talkingUser: {...infoUser}
               })
 						} else if (state == 'release') {
 							// count: "2"
@@ -266,7 +264,8 @@ export default class extends Component {
 						calling: false,
 						connectedMemberObj: null,
 						calledUsers: [],
-						duration: 0
+						duration: 0,
+						talkingUser: null
 					})
 					oSipSessionCall = null;
 					// 清除计时器
@@ -287,15 +286,14 @@ export default class extends Component {
 
 	// 开始拨号
 	sipCall () {
-
-    const {selectedUsers} = this.props
     const {netNormal} = this.state
-		if (!selectedUsers.length) return
-
 		if(!netNormal){
       this.mMessage('error', 'scoket连接失败')
       return
     }
+
+    const {selectedUsers} = this.props
+		if (!selectedUsers.length) return
 
 		if (this.state.callConnected && oSipSessionCall) { //申请通话权限
 			oSipSessionCall.info(`action=req\r\nid=${this.state.sessionId}level=1`,
@@ -319,7 +317,7 @@ export default class extends Component {
 			if (tempGroup !=0) {
 				oSipSessionCall = null
 				this.setState({calling: false, sessionId: null})
-        this.mMessgae('error','呼叫失败')
+        this.mMessage('error','呼叫失败')
 			} else {
         this.setState({calledUsers: [...selectedUsers]})
       }
@@ -374,16 +372,15 @@ export default class extends Component {
 
   handleOk () {
     const {usernumber} = this.props.account
-    const {selectedUsers, inpVal} = this.state
+    const {inpVal} = this.state
 
     let tempGroups = Storage.localGet(`${usernumber}tempgroup`) || []
     tempGroups.unshift(JSON.stringify({
       name: inpVal,
-      users: selectedUsers
+      users: this.props.selectedUsers
     }))
 
     tempGroups = tempGroups.splice(0,50)
-
     Storage.localSet(`${usernumber}tempgroup`, tempGroups)
     this.setState({modalVisible: false, inpVal: ''})
     this.mMessage('success', '保存成功')
@@ -425,7 +422,7 @@ export default class extends Component {
 
 		let audioRemote = document.getElementById('audio_remote')
 
-		const { loginConfig, oConfigCall } = this.state
+		const { oConfigCall } = this.state
     const {height} = this.props
 
 		this.setState({
@@ -547,7 +544,7 @@ export default class extends Component {
 	selectedUsersDom () {
 		const {selectedUsers=[]} = this.props
     const {sessionId, talkingUser, calledUsers, connectedMemberObj, userCardSty} = this.state
-    const users = calledUsers.length ? calledUsers : selectedUsers
+    const users = calledUsers.length ? calledUsers : selectedUsers || []
 		let sty = this.getUserCardStyleByNum(users.length)
 
 		return (
@@ -581,7 +578,8 @@ export default class extends Component {
 										<span className={`${styles.name} ${baseStyles['flex-item']} ${baseStyles['text-overflow']}`}>
 											{user.usr_name}
 										</span>
-                    {talkingUser && talkingUser.usr_number === user.usr_number ? this.talkingDom('talking-ani') : ''}
+
+											{talkingUser && talkingUser.usr_number === user.usr_number ? this.talkingDom('talking-ani') : ''}
 									</div>
 							</li>
 				)

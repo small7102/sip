@@ -3,7 +3,7 @@ import iconfont from '../assets/iconfont.less'
 import styles from './Users.less'
 import baseStyles from '../assets/base.less'
 import Box from '../Box/Box'
-import { Input, Checkbox, Avatar, Icon, Popover } from 'antd';
+import { Input, Checkbox, Avatar, Icon, Popover, Spin } from 'antd';
 
 export default
 class Users extends Component {
@@ -110,6 +110,17 @@ class Users extends Component {
       this.props.onRef(this)
   }
 
+	arrowDom () {
+		return (
+			<div className={`${styles['arrow-wrap']}`}>
+				<ul>
+					<li className={baseStyles['m-item']}>单呼</li>
+					<li className={baseStyles['m-item']} style={{border: 'none'}}>语音记录</li>
+				</ul>
+			</div>
+		)
+	}
+
 	seachResultDom () {
 		const {searchList} = this.state
 
@@ -169,7 +180,18 @@ class Users extends Component {
 				width={width}
 				content={
 					<div className="m-users-wrap">
+						{this.arrowDom()}
 						{this.searchDom()}
+						{loading && 
+							(
+								<div 
+									className={`${baseStyles['w100']} ${baseStyles.flex} ${baseStyles['align-center']}  ${baseStyles['justify-center']}`}
+									style={{height: `${height-200}px`}}
+								>
+									<Spin />
+								</div>
+							)
+						}
 						<Checkbox.Group
 							className={`${baseStyles['w100']}`}
 							value={selectedUserIds}

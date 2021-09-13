@@ -25,6 +25,7 @@
   "dependencies": {
     "@antv/data-set": "^0.9.0",
     "antd": "^3.9.0",
+    "axios": "^0.21.4",
     "bizcharts": "^3.1.10",
     "bizcharts-plugin-slider": "^2.0.3",
     "classnames": "^2.2.6",

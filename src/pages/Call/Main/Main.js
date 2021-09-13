@@ -24,6 +24,7 @@ class SipCall extends Component {
 		super(props)
 		this.getSelectedUsers = this.getSelectedUsers.bind(this)
     this.saveTempgroup = this.saveTempgroup.bind(this)
+    this.tempCallByRecords = this.tempCallByRecords.bind(this)
 	}
   componentWillMount(){
     this.loadSipAssets()
@@ -33,6 +34,7 @@ class SipCall extends Component {
 		width: 1920,
 		usernumber: '10010007',
 		pwd: '460490',
+		level: 1,
 		socket_url: 'wss://183.47.46.242:7443',
 		selectedUserIds: [],
 		selectedUsers: [],
@@ -46,9 +48,9 @@ class SipCall extends Component {
     const rawHeadAppendChild = HTMLHeadElement.prototype.appendChild
 
     HTMLHeadElement.prototype.appendChild = function (child) {
-      if(child.src.indexOf('/src/tiny')> -1) a++
-      if(child.src.indexOf('/SIPml.js')> -1) a++
-      // console.log('我要加入了', a)
+      if(child && child.src && child.src.indexOf('/src/tiny')> -1) a++
+      if(child && child.src && child.src.indexOf('/SIPml.js')> -1) a++
+      console.log('我要加入了', a)
       if (a>=97) {
         child.addEventListener('load', () => {
           setTimeout(()=> {
@@ -98,6 +100,7 @@ class SipCall extends Component {
 				return true
 			} else {
 				myself = user
+				console.log(user)
 				return false
 			}
 		})
@@ -123,6 +126,15 @@ class SipCall extends Component {
     this.setState({callRef: ref})
   }
 
+	tempCallByRecords (data) {
+		const {callRef} = this.state
+		this.setState({
+			selectedUsers: data.users
+		}, () => {
+			callRef.sipCall(data.users)
+		})
+	}
+
 	componentDidMount () {
 		const { dispatch } = this.props;
 		dispatch({
@@ -146,7 +158,7 @@ class SipCall extends Component {
 					usernumber: this.state.usernumber,
 					pwd: this.state.pwd
 				}
-			});
+			})
 		}, QUERY_ONLINE_DURATION)
 
 		this.setState({
@@ -205,6 +217,7 @@ class SipCall extends Component {
             width={width > 1500 ? 360 : 300}
             onTempGroupRef={this.onTempGroupRef}
             usernumber={usernumber}
+						tempCallByRecords={this.tempCallByRecords}
           >
             </Tempgroups>
 				</div>

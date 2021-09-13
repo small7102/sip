@@ -11,6 +11,7 @@ import Storage from '../utils/localStore';
   constructor (props) {
 		super(props)
     this.removeTempItem = this.removeTempItem.bind(this)
+    this.handleCreate = this.handleCreate.bind(this)
 	}
 
   state = {
@@ -26,38 +27,50 @@ import Storage from '../utils/localStore';
     Storage.localSet(`${usernumber}tempgroup`, _list.map(item => JSON.stringify(item)))
   }
 
+  handleCreate (data) {
+    this.props.tempCallByRecords(data)
+  }
+
+  
+  getLocalData () {
+    const {usernumber} = this.props
+    
+    let list = Storage.localGet(`${usernumber}tempgroup`) || []
+    list = list.map(item => JSON.parse(item))
+    
+    this.setState({list})
+  }
+  
+  componentDidMount () {
+    this.getLocalData()
+    
+    this.props.onTempGroupRef(this)
+  }
+  
   GroupsList () {
     const {list} = this.state
     return (list.map((item, index) => {
       return (
-        <div key={index} className={`${styles['group-item']} ${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['m-item']}`}>
+        <div 
+          key={index} 
+          className={`${styles['group-item']} ${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['m-item']}`}
+          onClick={(e)=> {
+            this.handleCreate(item)
+          }}
+        >
             <div className={[baseStyles['flex-item']]}>
               {item.name}
             </div>
-            <Icon type="close"
-                  onClick={
-                    (e)=> {
-                      this.removeTempItem(item, index)
-                    }
-                  }/>
+            <Icon 
+              type="close"
+              onClick={
+                (e)=> {
+                  this.removeTempItem(item, index)
+                }
+              }/>
         </div>
       )
     }))
-  }
-
-  getLocalData () {
-    const {usernumber} = this.props
-
-    let list = Storage.localGet(`${usernumber}tempgroup`) || []
-    list = list.map(item => JSON.parse(item))
-
-    this.setState({list})
-  }
-
-  componentDidMount () {
-    this.getLocalData()
-
-    this.props.onTempGroupRef(this)
   }
 
   render () {

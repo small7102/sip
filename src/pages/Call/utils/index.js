@@ -1,5 +1,4 @@
 export function byteToString(arr) {
-	console.log(arr)
 	if (!arr) return
 	if (typeof arr === 'string') {
 			return arr;

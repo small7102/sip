@@ -854,7 +854,6 @@ SIPml.Stack = function (o_conf) {
             return;
         }
 
-        console.log(e, 857)
         switch (e.i_code) {
             case tsip_event_code_e.DIALOG_TRANSPORT_ERROR: s_type = 'transport_error'; break;
             case tsip_event_code_e.DIALOG_GLOBAL_ERROR: s_type = 'global_error'; break;

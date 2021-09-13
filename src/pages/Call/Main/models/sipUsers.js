@@ -24,7 +24,8 @@ export default {
 
       if (response && response.header && response.header.code == '1') {
         const users = response.data.users
-        const userKeys = response.fields['user-fields']
+        let userKeys = response.fields['user-fields']
+        userKeys.push('level')
 
         // key,value形式的数据
         const _users = users.map(item => {
@@ -32,7 +33,6 @@ export default {
           userKeys.forEach((key, index) =>{
             user[key] = item[index]
           })
-
           return user
         })
 
