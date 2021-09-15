@@ -4,22 +4,29 @@ import styles from './Users.less'
 import baseStyles from '../assets/base.less'
 import Box from '../Box/Box'
 import { Input, Checkbox, Avatar, Icon, Popover, Spin } from 'antd';
-
+import '../../Exception/style.less';
+const ITEM_HEIGHT = 50
 export default
 class Users extends Component {
 	constructor (props) {
 		super(props)
 		this.onSelectedUsersChange = this.onSelectedUsersChange.bind(this)
 		this.handleSelectSearchItem = this.handleSelectSearchItem.bind(this)
+		this.handleMore = this.handleMore.bind(this)
+		this.callByOne = this.callByOne.bind(this)
 	}
 	state = {
 		selectedUserIds: [],
 		inpVal: '',
-		searchList: []
+		searchList: [],
+    arrowTop: 200,
+    arrowLeft: 240,
+    dropItem: null,
+    users: []
 	}
 
-	listDom () {
-		const {usernumber, users, onlineIds=[]} = this.props
+  getOnlineUpUsers () {
+    const {usernumber, users, onlineIds=[]} = this.props
 		onlineIds.unshift(usernumber)
 		let _users = []
 
@@ -33,6 +40,14 @@ class Users extends Component {
 
 			_users = onlineUsers.concat(offlineUsers)
 		}
+
+    return _users
+  }
+
+	listDom () {
+    const {usernumber, onlineIds=[]} = this.props
+		const _users = this.getOnlineUpUsers()
+
 		return _users.map(item => {
 			return (<li className={`${baseStyles['m-item']} ${styles['user-item']} ${onlineIds.includes(item.usr_number) ? styles['online'] : styles['offline']}`}
 									key={item.usr_uuid}
@@ -55,7 +70,15 @@ class Users extends Component {
 								</div>
 							<div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
 								<span className={`${baseStyles.ft12} ${styles['state']}`}>{onlineIds.includes(item.usr_number) ? '在线' : '离线'}</span>
-								<i className={`${iconfont['icon-gengduo']} ${iconfont['m-icon']} ${styles['more-btn']}`}></i>
+								<i
+                  className={`${iconfont['icon-gengduo']} ${iconfont['m-icon']} ${styles['more-btn']}`}
+                  onClick={(e)=> {
+                    e.persist()
+                    e.stopPropagation()
+                    this.handleMore(e, item)
+                  }}
+                >
+                  </i>
 							</div>
 						</div>
 				</li>)
@@ -94,28 +117,62 @@ class Users extends Component {
 	}
 
 	handleSelectSearchItem (user) {
-		const {users} = this.props
+		const users = this.getOnlineUpUsers()
 		const {selectedUserIds} = this.state
+    const {height} = this.props
 		let ids = [...selectedUserIds]
-		ids.unshift(user.usr_number)
+
+		if (!ids.includes(user.usr_number)) ids.unshift(user.usr_number)
 		this.onSelectedUsersChange(ids)
 
 		// 找出当前成员在列表中的位置
 		let index = users.findIndex(item => item.usr_number == user.usr_number)
-		console.log(index, (index+1)*60, selectedUserIds)
-		this.setState({inpVal: ''})
+    let userRef = document.getElementById('userRef')
+    userRef.scrollTop = (index+1)*ITEM_HEIGHT - height + 300
+		console.log(index, (index+1)*ITEM_HEIGHT, selectedUserIds)
+		this.setState({inpVal: '',searchList: []})
 	}
+
+  handleMore (e, item) {
+    const {usernumber} = this.props
+    if (usernumber === item.usr_number) return
+    const {clientX, clientY} = e
+    this.setState({
+      arrowTop: clientY+10,
+      arrowLeft: clientX-110,
+      dropItem: item
+    })
+  }
 
   componentDidMount(){
       this.props.onRef(this)
+
+      window.addEventListener('click', (event)=> {
+        event.stopImmediatePropagation()
+        this.setState({dropItem: null})
+      })
+  }
+
+  callByOne () {
+    const {dropItem} = this.state
+    this.props.callByOne(dropItem)
   }
 
 	arrowDom () {
+    const {arrowLeft, arrowTop} = this.state
 		return (
-			<div className={`${styles['arrow-wrap']}`}>
+			<div
+        className={`${styles['arrow-wrap']}`}
+        style={{left: `${arrowLeft}px`, top: `${arrowTop}px`}}
+      >
 				<ul>
-					<li className={baseStyles['m-item']}>单呼</li>
-					<li className={baseStyles['m-item']} style={{border: 'none'}}>语音记录</li>
+					<li className={baseStyles['m-item']} onClick={this.callByOne}>
+            <i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua1']}`}></i>
+            单呼</li>
+					<li className={baseStyles['m-item']} style={{border: 'none'}}>
+            <i className={`${iconfont['m-icon']} ${iconfont['icon-lishijilu']}`}></i>
+            语音记录
+          </li>
 				</ul>
 			</div>
 		)
@@ -159,9 +216,9 @@ class Users extends Component {
 			>
 				<Input
 					placeholder="输入名称"
-					size="large"
 					prefix={<Icon type="search" style={{ color: 'rgba(255,255,255,.8)' }} />}
 					value={inpVal}
+          className={`${baseStyles['mt10']}`}
 					onChange={
 						(e) => this.handleSearch(e)
 					}
@@ -171,8 +228,8 @@ class Users extends Component {
 	}
 
 	render () {
-		let {height, width = 360, users, loading} = this.props
-    const {selectedUserIds} = this.state
+		let {height, width = 360, loading} = this.props
+    const {selectedUserIds, dropItem} = this.state
 		return(
 			<Box
 				title="通讯录"
@@ -180,11 +237,11 @@ class Users extends Component {
 				width={width}
 				content={
 					<div className="m-users-wrap">
-						{this.arrowDom()}
+						{dropItem && this.arrowDom()}
 						{this.searchDom()}
-						{loading && 
+						{loading &&
 							(
-								<div 
+								<div
 									className={`${baseStyles['w100']} ${baseStyles.flex} ${baseStyles['align-center']}  ${baseStyles['justify-center']}`}
 									style={{height: `${height-200}px`}}
 								>
@@ -198,8 +255,9 @@ class Users extends Component {
 							onChange={this.onSelectedUsersChange}
 						>
 							<ul
-								className={`${styles['list-wrap']} ${baseStyles['scroll-bar']}`} style={{height: `${height-100}px`}}
-								ref="userRef"
+								className={`${styles['list-wrap']} ${baseStyles['scroll-bar']} ${baseStyles['mt10']}`}
+                style={{height: `${height-100}px`}}
+								id="userRef"
 							>
 								{this.listDom()}
 							</ul>

@@ -31,28 +31,28 @@ import Storage from '../utils/localStore';
     this.props.tempCallByRecords(data)
   }
 
-  
+
   getLocalData () {
     const {usernumber} = this.props
-    
+
     let list = Storage.localGet(`${usernumber}tempgroup`) || []
     list = list.map(item => JSON.parse(item))
-    
+
     this.setState({list})
   }
-  
+
   componentDidMount () {
     this.getLocalData()
-    
+
     this.props.onTempGroupRef(this)
   }
-  
+
   GroupsList () {
     const {list} = this.state
     return (list.map((item, index) => {
       return (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className={`${styles['group-item']} ${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['m-item']}`}
           onClick={(e)=> {
             this.handleCreate(item)
@@ -61,7 +61,7 @@ import Storage from '../utils/localStore';
             <div className={[baseStyles['flex-item']]}>
               {item.name}
             </div>
-            <Icon 
+            <Icon
               type="close"
               onClick={
                 (e)=> {
@@ -87,7 +87,10 @@ import Storage from '../utils/localStore';
             {
               this.state.list.length ? this.GroupsList() :
               (
-                <div className={`${baseStyles.flex} ${baseStyles.ft13} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}>
+                <div
+                  className={`${baseStyles.flex} ${baseStyles.ft13} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
+                  style={{lineHeight: '150px'}}
+                >
                   暂无数据
                 </div>
               )

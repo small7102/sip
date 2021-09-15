@@ -249,7 +249,7 @@ export default class extends Component {
 				}
 				break;
 			}
-			case 'terminated': {
+			case 'terminated':case 'terminating': {
 				if (session == oSipSessionRegister) {
 
 					oSipSessionCall = null;
@@ -270,6 +270,7 @@ export default class extends Component {
 					oSipSessionCall = null;
 					// 清除计时器
 					clearInterval(timer)
+          timer = null
 				}
 				break;
 			}
@@ -287,13 +288,14 @@ export default class extends Component {
 	// 开始拨号
 	sipCall () {
     const {netNormal} = this.state
+    const {selectedUsers} = this.props
 		if(!netNormal){
       this.mMessage('error', 'scoket连接失败')
       return
     }
 
-    const {selectedUsers} = this.props
-		if (!selectedUsers.length) return
+
+    this.saveRecords()
 
 		if (this.state.callConnected && oSipSessionCall) { //申请通话权限
 			oSipSessionCall.info(`action=req\r\nid=${this.state.sessionId}level=1`,
@@ -335,6 +337,7 @@ export default class extends Component {
 	}
 
   hangUp () {
+    console.log(oSipSessionCall,12345)
 		if (oSipSessionCall) {
 			oSipSessionCall.hangup({
 				events_listener: {
@@ -368,6 +371,21 @@ export default class extends Component {
 
   handleSave () {
     this.setState({modalVisible: true})
+  }
+
+  saveRecords () {
+    const {usernumber, myself} = this.props.account
+    let records = Storage.localGet(`${usernumber}records`) || []
+    records.unshift(JSON.stringify({
+      name: myself && myself.usr_name,
+      time: new Date().getTime(),
+      type: 0,
+      users: this.props.selectedUsers
+    }))
+
+    records = records.splice(0,50)
+    Storage.localSet(`${usernumber}records`, records)
+    this.props.saveRecords()
   }
 
   handleOk () {
@@ -468,9 +486,9 @@ export default class extends Component {
 
 	getUserCardStyleByNum (len) {
 		let sty = ''
-		if (len > 4 && len <= 8) {
+		if (len > 3 && len <= 6) {
 			sty = 'medium'
-		} else if (len > 8) {
+		} else if (len > 6) {
 			sty = 'small'
 		} else {
 			sty = 'normal'
@@ -558,7 +576,7 @@ export default class extends Component {
 
                       { sessionId ?
                         [<span className={`${styles['state-icon']} ${styles[connectedMemberObj && connectedMemberObj[user.usr_number] ? 'light': 'dark']}`}></span>,
-                        <div className={`${baseStyles.ft12} ${styles['user-state']}`}>
+                        <div className={`${baseStyles.ft12} ${styles['user-state']} ${baseStyles['flex-item']}`}>
                           {connectedMemberObj && connectedMemberObj[user.usr_number] ? '已接入' : '连接中'}
                         </div>] : <Icon type="close"
                               className={`${baseStyles['pointer']}`}
@@ -586,6 +604,17 @@ export default class extends Component {
 			})
 		)
 	}
+
+  tipsDom () {
+    return (
+      <div className={`${baseStyles.flex} ${baseStyles.h100} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}>
+        <i className={`${iconfont['m-icon']} ${iconfont['icon-tixing']}`}
+           style={{color: '#F4B754'}}
+        ></i>
+        请先在左侧列表选择成员
+      </div>
+    )
+  }
 
 
   createHandlers = () => {
@@ -645,10 +674,12 @@ export default class extends Component {
 
 		return (
 			<div className={`m-call-wrap ${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
-					style={{height: `${height}px`}}
+					style={{height: `${height}px`, zIndex: 3}}
 					>
 				<div className={styles.top}></div>
 				<h2 className={styles.title}>语音通话</h2>
+        <i className={`${iconfont['m-icon']} ${iconfont['icon-pronunciatio']} ${styles['bg-icon']}`}
+        ></i>
 				<audio id="audio_remote" autoPlay></audio>
 				<audio id="ringbackTone" autoPlay={calling ? true : false} loop src={ringbacktoneSrc}>
 				</audio>
@@ -667,7 +698,7 @@ export default class extends Component {
 							{talkingUser ? `${talkingUser.usr_name}正在说话...` : ''}
 						</div>
 					</div>
-					{ selectedUsers.length ? this.createHandlers() : ''}
+					{ selectedUsers.length ? this.createHandlers() : this.tipsDom()}
 				</div>
 
         <Modal

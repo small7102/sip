@@ -23,9 +23,9 @@
 }
 
 .user-item {
-	height: 60px;
-	line-height: 60px;
-	font-size: 15px;
+	height: 50px;
+	line-height: 50px;
+	font-size: 14px;
 	border-bottom: 1px solid rgba(174,213,246,.16);
 	&.offline {
 		.item-name {
@@ -56,18 +56,32 @@
 
 .arrow-wrap {
 	position: fixed;
-	top: 600px;
-	left: 344px;
-	height: 90px;
 	width: 130px;
-	background: #183473;
-	border: 1px solid #7383b0;
+	background: #111e4d;
+	border: 1px solid #3c5086;
 	border-radius: 6px;
-	padding: 13px 10px;
+	padding: 0 10px;
+  box-shadow: 0 -7px 16px 0 #ffe8e826;
+  &::after{
+    position: absolute;
+    content: '';
+    top: -5px;
+    right: 10px;
+    height: 0;
+    width: 0;
+    border-width: 6px;
+    filter: drop-shadow(0 2px 12px rgba(255,255,255,.03));
+    border-color: transparent;
+    border-style: solid;
+    border-bottom-color: #111e4d;
+    border-top-width: 0;
+  }
 }
 
 .arrow-wrap li {
 	line-height: 32px;
+  height: 32px;
+  font-size: 13px;
 }
 
 

@@ -2,6 +2,7 @@ html,
 body,
 #root {
   height: 100%;
+  line-height: 1;
 }
 
 .colorWeak {
@@ -39,11 +40,19 @@ ol {
 
 :global {
   .ant-layout-content{
-    margin: 0 !important;
+    margin: 24px 24px 0px !important;
   }
 
   .ant-message-notice-content{
     background-color: rgba(0, 0, 0, .4);
+  }
+
+  .ant-layout {
+    background: #172b65 !important;
+  }
+
+  .ant-layout-footer{
+    display: none;
   }
 
   .m-users-wrap {

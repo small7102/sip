@@ -2,6 +2,7 @@ html,
 body,
 #root {
   height: 100%;
+  line-height: 1;
 }
 .colorWeak {
   filter: invert(80%);
@@ -30,9 +31,27 @@ ol {
   margin: 0 !important;
 }
 :global .ant-layout-content {
-  margin: 0 !important;
+  margin: 24px 24px 0px !important;
 }
 :global .ant-message-notice-content {
   background-color: rgba(0, 0, 0, 0.4);
+}
+:global .ant-layout {
+  background: #172b65 !important;
+}
+:global .ant-layout-footer {
+  display: none;
+}
+:global .m-users-wrap .ant-input {
+  background: #16255b;
+  border: 1px solid #7f89e2;
+}
+:global .m-users-wrap .ant-checkbox-inner {
+  background: none;
+  border: 1px solid #7f89e2;
+}
+:global .m-users-wrap .ant-checkbox-disabled .ant-checkbox-inner {
+  background: none;
+  border: 1px solid #7f89e2;
 }
 /*# sourceMappingURL=./global.css.map */

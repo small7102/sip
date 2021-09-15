@@ -1,7 +1,7 @@
 @font-face {
   font-family: 'iconfont';
   /* Project id 2768765 */
-  src: url('//at.alicdn.com/t/font_2768765_acaxrsc8xz.woff2?t=1631174992679') format('woff2'), url('//at.alicdn.com/t/font_2768765_acaxrsc8xz.woff?t=1631174992679') format('woff'), url('//at.alicdn.com/t/font_2768765_acaxrsc8xz.ttf?t=1631174992679') format('truetype');
+  src: url('//at.alicdn.com/t/font_2768765_mz2gc8u7f9b.woff2?t=1631673942041') format('woff2'), url('//at.alicdn.com/t/font_2768765_mz2gc8u7f9b.woff?t=1631673942041') format('woff'), url('//at.alicdn.com/t/font_2768765_mz2gc8u7f9b.ttf?t=1631673942041') format('truetype');
 }
 .m-icon {
   font-family: "iconfont" !important;
@@ -37,5 +37,17 @@
 }
 .icon-wifi-outline::after {
   content: '\e6b6';
+}
+.icon-dianhua1::after {
+  content: '\e660';
+}
+.icon-lishijilu::after {
+  content: '\e638';
+}
+.icon-pronunciatio::after {
+  content: '\e80a';
+}
+.icon-tixing::after {
+  content: '\e637';
 }
 /*# sourceMappingURL=./iconfont.css.map */

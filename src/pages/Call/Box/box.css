@@ -6,7 +6,8 @@
 }
 .box-wrap .title {
   color: #b5dcfb;
-  font-size: 20px;
+  font-size: 17px;
+  line-height: 30px;
 }
 .box-wrap .title i {
   color: #7ed9ec;

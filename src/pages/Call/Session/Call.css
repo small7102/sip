@@ -2,8 +2,17 @@
   margin: 0 12px;
   border-radius: 20px;
   position: relative;
-  min-width: 600px;
+  min-width: 560px;
   color: #fff;
+}
+.call-wrap .bg-icon {
+  position: absolute;
+  font-size: 160px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.1);
+  z-index: 0;
 }
 .call-wrap .top {
   position: absolute;
@@ -17,15 +26,15 @@
 .call-wrap .title {
   position: absolute;
   width: 100%;
-  top: -24px;
+  top: -12px;
   left: 0;
-  font-size: 34px;
+  font-size: 24px;
   text-align: center;
   color: #fff;
 }
 .call-wrap .selected-user-wrap {
   width: 90%;
-  margin: 60px auto;
+  margin: 40px auto;
   flex-wrap: wrap;
   max-height: 75%;
 }
@@ -108,7 +117,7 @@
   line-height: 30px;
 }
 .call-wrap .handlers {
-  margin: 55px 80px;
+  margin-top: 20px;
 }
 .call-wrap .handler-item .handler-item-circle {
   border-radius: 100%;
@@ -121,16 +130,16 @@
   transition: all 0.2s;
 }
 .call-wrap .handler-between {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   margin: 10px 20px !important;
   text-align: center;
-  line-height: 80px;
+  line-height: 60px;
 }
 .call-wrap .handler-center {
-  width: 100px;
-  height: 100px;
-  line-height: 100px;
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
   text-align: center;
 }
 .call-wrap .cancel {
@@ -142,7 +151,7 @@
   background-color: rgba(255, 255, 255, 0.3);
   border: 1px solid #fff;
   font-size: 30px !important;
-  line-height: 70px;
+  line-height: 50x;
 }
 .call-wrap .create {
   background-color: #3e79f2;
@@ -314,24 +323,24 @@
     opacity: 1;
   }
 }
-@media (max-width: 1500px) {
+@media (max-width: 1600px) {
   .call-wrap .selected-user-wrap {
     max-height: 80%;
   }
   .call-wrap .small {
     height: 136px;
-    width: 120px;
+    width: 112px;
   }
   .call-wrap .small .avatar-wrap {
-    width: 120px;
-    height: 120px;
+    width: 112px;
+    height: 112px;
   }
   .call-wrap .small .top-info {
-    height: 25px;
+    height: 20px;
   }
   .call-wrap .small .name {
-    line-height: 30px;
-    font-size: 13px;
+    line-height: 24px;
+    font-size: 12px;
   }
   .call-wrap .normal {
     height: 180px;
@@ -399,5 +408,15 @@
 .modal :global .ant-btn-primary[disabled].active {
   background-color: #f5f5f5;
   border-color: #d9d9d9;
+}
+@media (max-width: 1718px) {
+  .normal {
+    height: 190px;
+    width: 150px;
+  }
+  .normal .avatar-wrap {
+    width: 150px;
+    height: 150px;
+  }
 }
 /*# sourceMappingURL=./Call.css.map */

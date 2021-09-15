@@ -1,5 +1,4 @@
-import queryError from '@/services/error';
-import {queryUsers, getOnlineUsers} from '../../services/index'
+import {queryUsers, getOnlineUsers, getCallRecords} from '../../services/index'
 
 export default {
   namespace: 'sipUsers',
@@ -16,6 +15,15 @@ export default {
         yield put({
           type: 'saveOnlineUsers',
           payload: response.users
+        })
+      }
+    },
+    *getCallRecords({ payload }, {call, put}) {
+      const response = yield call(getCallRecords, payload);
+      if (response && response.header && response.header.code == '0') {
+        yield put({
+          type: 'saveCallRecords',
+          payload: response
         })
       }
     },
@@ -55,6 +63,12 @@ export default {
       return {
         ...state,
         onlineUserIds: payload
+      }
+    },
+    saveCallRecords (state, {payload}) {
+      return {
+        ...state,
+        callRecords: payload
       }
     }
   },

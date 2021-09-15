@@ -2,8 +2,17 @@
 	margin: 0 12px;
 	border-radius: 20px;
 	position: relative;
-	min-width: 600px;
+	min-width: 560px;
 	color: #fff;
+  .bg-icon{
+    position: absolute;
+    font-size: 160px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color:rgba(255,255,255,.1);
+    z-index: 0
+  }
 	.top{
 		position: absolute;
 		top:-2px;
@@ -16,15 +25,15 @@
 	.title {
 		position: absolute;
 		width: 100%;
-		top: -24px;
+		top: -12px;
 		left: 0;
-		font-size: 34px;
+		font-size: 24px;
 		text-align: center;
 		color: #fff;
 	}
 	.selected-user-wrap {
 		width: 90%;
-		margin: 60px auto;
+		margin: 40px auto;
 		flex-wrap: wrap;
     max-height: 75%;
 	}
@@ -109,7 +118,7 @@
 		}
 	}
   .handlers {
-    margin: 55px 80px;
+    margin-top: 20px
   }
 
   .handler-item .handler-item-circle {
@@ -123,16 +132,16 @@
 		}
   }
   .handler-between{
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     margin: 10px 20px !important;
 		text-align: center;
-		line-height: 80px;
+		line-height: 60px;
   }
   .handler-center{
-    width: 100px;
-    height: 100px;
-		line-height: 100px;
+    width: 80px;
+    height: 80px;
+		line-height: 80px;
 		text-align: center;
   }
   .cancel{
@@ -144,7 +153,7 @@
 		background-color: rgba(255, 255, 255, .3);
     border: 1px solid #fff;
 		font-size: 30px !important;
-		line-height: 70px;
+		line-height: 50x;
   }
   .create {
     background-color: #3e79f2;
@@ -332,17 +341,17 @@
     }
 		.small {
 			height: 136px;
-			width: 120px;
+			width: 112px;
 			.avatar-wrap {
-				width: 120px;
-				height: 120px;
+				width: 112px;
+				height: 112px;
 			}
 			.top-info{
-				height: 25px;
+				height: 20px;
 			}
 			.name{
-				line-height: 30px;
-				font-size: 13px;
+				line-height: 24px;
+				font-size: 12px;
 			}
 		}
 		.normal {

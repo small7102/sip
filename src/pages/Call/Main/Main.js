@@ -25,6 +25,7 @@ class SipCall extends Component {
 		this.getSelectedUsers = this.getSelectedUsers.bind(this)
     this.saveTempgroup = this.saveTempgroup.bind(this)
     this.tempCallByRecords = this.tempCallByRecords.bind(this)
+    this.saveRecords = this.saveRecords.bind(this)
 	}
   componentWillMount(){
     this.loadSipAssets()
@@ -41,6 +42,7 @@ class SipCall extends Component {
     userRef: null,
     callRef: null,
     tempgroupRef: null,
+    recordsRef: null,
     loadedAsset: false
 	}
 
@@ -106,13 +108,18 @@ class SipCall extends Component {
 		})
 
 		myself && users.unshift(myself)
-		return users
+		return users || []
 	}
 
   saveTempgroup () {
     const {tempgroupRef} = this.state
     tempgroupRef && tempgroupRef.getLocalData()
-    // console.log(this.state, 0000)
+  }
+
+  saveRecords () {
+    console.log(this.state)
+    const {recordsRef} = this.state
+    recordsRef && recordsRef.getLocalData()
   }
 
   onRef= (ref)=> {
@@ -124,6 +131,19 @@ class SipCall extends Component {
 
   onCallRef = (ref) => {
     this.setState({callRef: ref})
+  }
+
+  onRecordsRef = (ref) => {
+    this.setState({recordsRef: ref})
+  }
+
+  callByOne = (user) => {
+    const {callRef} = this.state
+		this.setState({
+			selectedUsers: [user]
+		}, () => {
+			callRef.sipCall([user])
+		})
   }
 
 	tempCallByRecords (data) {
@@ -151,6 +171,16 @@ class SipCall extends Component {
 				pwd: this.state.pwd
 			}
 		});
+		dispatch({
+			type: 'sipUsers/getCallRecords',
+			payload: {
+				usernumber: this.state.usernumber,
+				pwd: this.state.pwd,
+        moreParams: {
+          caller_id_number: '10010023'
+        }
+			}
+		});
 		setInterval(() => {
 			dispatch({
 				type: 'sipUsers/getOnlineUsers',
@@ -174,7 +204,7 @@ class SipCall extends Component {
 		})
 
     loadTimer = setInterval(() => {
-      if (loadedAsset) {
+      if (loadedAsset && this.state.callRef) {
         this.state.callRef.newSip()
         clearInterval()
         loadTimer=null
@@ -189,10 +219,10 @@ class SipCall extends Component {
 		return(
 			<div
 				className={`${styles.sipcall} ${baseStyles['flex']}`}
-				style={{height: `${height-48}px`}}
+				style={{height: `${height-112}px`}}
 			>
 				<Users ref="users"
-               height={height-140}
+               height={height-112}
 							 width={width > 1500 ? 360 : 300}
 							 users={this.usersOfUpMyself()}
 							 loading={loading}
@@ -200,20 +230,28 @@ class SipCall extends Component {
 							 getSelectedUserIds={this.getSelectedUsers}
                onRef={this.onRef}
 							 usernumber={usernumber}
+               callByOne={this.callByOne}
 				/>
-				<Call height={height-140}
+				<Call height={height-112}
 							selectedUsers={selectedUsers}
               removeSelectedUser={this.removeSelectedUser}
               saveTempgroup={this.saveTempgroup}
-							account={{usernumber, pwd, socket_url}}
+              saveRecords={this.saveRecords}
+							account={{usernumber, pwd, socket_url, myself: this.usersOfUpMyself()[0]}}
               onRef={this.onCallRef}
 				/>
 				<div
 					className={`${styles['right-wrap']}`}
 				>
-					<History height={height - 450} width={width > 1500 ? 360 : 300}></History>
+					<History
+            height={height - 332}
+            width={width > 1500 ? 360 : 300}
+            onRecordsRef={this.onRecordsRef}
+            usernumber={usernumber}
+            tempCallByRecords={this.tempCallByRecords}
+          />
 					<Tempgroups
-            height={290}
+            height={200}
             width={width > 1500 ? 360 : 300}
             onTempGroupRef={this.onTempGroupRef}
             usernumber={usernumber}
