@@ -31,7 +31,7 @@ export async function getCallRecords(params) {
     {
        ...options,
       method: 'POST',
-      body: getParams(params,false),
+      data: getParams(params,false),
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
