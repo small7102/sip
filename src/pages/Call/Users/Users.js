@@ -3,6 +3,7 @@ import iconfont from '../assets/iconfont.less'
 import styles from './Users.less'
 import baseStyles from '../assets/base.less'
 import Box from '../Box/Box'
+import VoiceRecords from '../VoiceRecords';
 import { Input, Checkbox, Avatar, Icon, Popover, Spin } from 'antd';
 import '../../Exception/style.less';
 const ITEM_HEIGHT = 50
@@ -14,6 +15,7 @@ class Users extends Component {
 		this.handleSelectSearchItem = this.handleSelectSearchItem.bind(this)
 		this.handleMore = this.handleMore.bind(this)
 		this.callByOne = this.callByOne.bind(this)
+		this.queryVoice = this.queryVoice.bind(this)
 	}
 	state = {
 		selectedUserIds: [],
@@ -22,7 +24,8 @@ class Users extends Component {
     arrowTop: 200,
     arrowLeft: 240,
     dropItem: null,
-    users: []
+    users: [],
+		visible: false
 	}
 
   getOnlineUpUsers () {
@@ -144,6 +147,14 @@ class Users extends Component {
     })
   }
 
+	queryVoice () {
+		this.setState({visible: true})
+	}
+	
+	onVoiceClose = () => {
+		this.setState({visible: false})
+	}
+
   componentDidMount(){
       this.props.onRef(this)
 
@@ -169,7 +180,11 @@ class Users extends Component {
 					<li className={baseStyles['m-item']} onClick={this.callByOne}>
             <i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua1']}`}></i>
             单呼</li>
-					<li className={baseStyles['m-item']} style={{border: 'none'}}>
+					<li 
+						className={baseStyles['m-item']} 
+						style={{border: 'none'}}
+						onClick={this.queryVoice}
+					>
             <i className={`${iconfont['m-icon']} ${iconfont['icon-lishijilu']}`}></i>
             语音记录
           </li>
@@ -218,7 +233,7 @@ class Users extends Component {
 					placeholder="输入名称"
 					prefix={<Icon type="search" style={{ color: 'rgba(255,255,255,.8)' }} />}
 					value={inpVal}
-          className={`${baseStyles['mt10']}`}
+          className={`${baseStyles['mt10']} ${styles['m-inp']}`}
 					onChange={
 						(e) => this.handleSearch(e)
 					}
@@ -228,8 +243,8 @@ class Users extends Component {
 	}
 
 	render () {
-		let {height, width = 360, loading} = this.props
-    const {selectedUserIds, dropItem} = this.state
+		let {height, width = 360, loading, usernumber, pwd} = this.props
+    const {selectedUserIds, dropItem, visible} = this.state
 		return(
 			<Box
 				title="通讯录"
@@ -250,7 +265,7 @@ class Users extends Component {
 							)
 						}
 						<Checkbox.Group
-							className={`${baseStyles['w100']}`}
+							className={`${baseStyles['w100']}  ${styles['m-inp']}`}
 							value={selectedUserIds}
 							onChange={this.onSelectedUsersChange}
 						>
@@ -262,6 +277,14 @@ class Users extends Component {
 								{this.listDom()}
 							</ul>
 						</Checkbox.Group>
+						<VoiceRecords 
+							visible={visible} 
+							data={dropItem}
+							usernumber={usernumber}
+							pwd = {pwd}
+							users={this.getOnlineUpUsers()}
+							onVoiceClose={this.onVoiceClose}
+						/>
 					</div>
 				}>
 			</Box>

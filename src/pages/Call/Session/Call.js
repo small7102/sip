@@ -607,7 +607,10 @@ export default class extends Component {
 
   tipsDom () {
     return (
-      <div className={`${baseStyles.flex} ${baseStyles.h100} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}>
+      <div 
+				className={`${baseStyles.flex} ${baseStyles.h100} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
+				style={{marginBottom: -141, color: 'rgba(255,255,255,.5)'}}
+			>
         <i className={`${iconfont['m-icon']} ${iconfont['icon-tixing']}`}
            style={{color: '#F4B754'}}
         ></i>

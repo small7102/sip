@@ -33,10 +33,10 @@ class SipCall extends Component {
 	state = {
 		height: 1080,
 		width: 1920,
-		usernumber: '10010007',
-		pwd: '460490',
+		usernumber: '10010022',
+		pwd: '228304',
 		level: 1,
-		socket_url: 'wss://183.47.46.242:7443',
+		socket_url: 'wss://183.47.46.242:7443/',
 		selectedUserIds: [],
 		selectedUsers: [],
     userRef: null,
@@ -50,16 +50,13 @@ class SipCall extends Component {
     const rawHeadAppendChild = HTMLHeadElement.prototype.appendChild
 
     HTMLHeadElement.prototype.appendChild = function (child) {
-      if(child && child.src && child.src.indexOf('/src/tiny')> -1) a++
-      if(child && child.src && child.src.indexOf('/SIPml.js')> -1) a++
-      console.log('我要加入了', a)
-      if (a>=97) {
-        child.addEventListener('load', () => {
-          setTimeout(()=> {
-            loadedAsset = true
-          },1000)
-        })
-      }
+			if(child && child.src && child.src.indexOf('tmedia_session_ghost')> -1) {
+				child.addEventListener('load', () => {
+					setTimeout(()=> {
+						loadedAsset = true
+					},1000)
+				})
+			}
       return rawHeadAppendChild.call(this, child)
     }
 
@@ -102,7 +99,7 @@ class SipCall extends Component {
 				return true
 			} else {
 				myself = user
-				console.log(user)
+				// console.log(user)
 				return false
 			}
 		})
@@ -171,16 +168,16 @@ class SipCall extends Component {
 				pwd: this.state.pwd
 			}
 		});
-		dispatch({
-			type: 'sipUsers/getCallRecords',
-			payload: {
-				usernumber: this.state.usernumber,
-				pwd: this.state.pwd,
-        moreParams: {
-          caller_id_number: '10010023'
-        }
-			}
-		});
+		// dispatch({
+		// 	type: 'sipUsers/getCallRecords',
+		// 	payload: {
+		// 		usernumber: this.state.usernumber,
+		// 		pwd: this.state.pwd,
+    //     moreParams: {
+    //       caller_id_number: '10010023'
+    //     }
+		// 	}
+		// });
 		setInterval(() => {
 			dispatch({
 				type: 'sipUsers/getOnlineUsers',
@@ -223,13 +220,14 @@ class SipCall extends Component {
 			>
 				<Users ref="users"
                height={height-112}
-							 width={width > 1500 ? 360 : 300}
+							 width={width > 1500 ? 360 : 260}
 							 users={this.usersOfUpMyself()}
 							 loading={loading}
 							 onlineIds={sipUsers.onlineUserIds}
 							 getSelectedUserIds={this.getSelectedUsers}
                onRef={this.onRef}
 							 usernumber={usernumber}
+							 pwd={pwd}
                callByOne={this.callByOne}
 				/>
 				<Call height={height-112}
@@ -245,14 +243,14 @@ class SipCall extends Component {
 				>
 					<History
             height={height - 332}
-            width={width > 1500 ? 360 : 300}
+            width={width > 1500 ? 360 : 260}
             onRecordsRef={this.onRecordsRef}
             usernumber={usernumber}
             tempCallByRecords={this.tempCallByRecords}
           />
 					<Tempgroups
             height={200}
-            width={width > 1500 ? 360 : 300}
+            width={width > 1500 ? 360 : 260}
             onTempGroupRef={this.onTempGroupRef}
             usernumber={usernumber}
 						tempCallByRecords={this.tempCallByRecords}
