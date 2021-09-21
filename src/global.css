@@ -2,7 +2,7 @@ html,
 body,
 #root {
   height: 100%;
-  line-height: 1;
+  line-height: 1 !important;
 }
 .colorWeak {
   filter: invert(80%);
@@ -41,17 +41,5 @@ ol {
 }
 :global .ant-layout-footer {
   display: none;
-}
-:global .m-users-wrap .ant-input {
-  background: #16255b;
-  border: 1px solid #7f89e2;
-}
-:global .m-users-wrap .ant-checkbox-inner {
-  background: none;
-  border: 1px solid #7f89e2;
-}
-:global .m-users-wrap .ant-checkbox-disabled .ant-checkbox-inner {
-  background: none;
-  border: 1px solid #7f89e2;
 }
 /*# sourceMappingURL=./global.css.map */

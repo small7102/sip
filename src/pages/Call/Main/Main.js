@@ -33,33 +33,32 @@ class SipCall extends Component {
 	state = {
 		height: 1080,
 		width: 1920,
-		usernumber: '10010007',
-		pwd: '460490',
-		level: 1,
-		socket_url: 'wss://183.47.46.242:7443',
+		usernumber: '10010022',
+		pwd: '228304',
+    realm: 'kinet',
+		socket_url: 'wss://183.47.46.242:7443/',
+    data_url: 'http://183.47.46.242:8008',
 		selectedUserIds: [],
 		selectedUsers: [],
     userRef: null,
     callRef: null,
     tempgroupRef: null,
     recordsRef: null,
-    loadedAsset: false
+    loadedAsset: false,
+    hasPoCDevice: false
 	}
 
 	loadSipAssets() {
     const rawHeadAppendChild = HTMLHeadElement.prototype.appendChild
 
     HTMLHeadElement.prototype.appendChild = function (child) {
-      if(child && child.src && child.src.indexOf('/src/tiny')> -1) a++
-      if(child && child.src && child.src.indexOf('/SIPml.js')> -1) a++
-      console.log('我要加入了', a)
-      if (a>=97) {
-        child.addEventListener('load', () => {
-          setTimeout(()=> {
-            loadedAsset = true
-          },1000)
-        })
-      }
+			if(child && child.src && child.src.indexOf('tmedia_session_ghost')> -1) {
+				child.addEventListener('load', () => {
+					setTimeout(()=> {
+						loadedAsset = true
+					},1000)
+				})
+			}
       return rawHeadAppendChild.call(this, child)
     }
 
@@ -74,11 +73,15 @@ class SipCall extends Component {
 
 	getSelectedUsers =(data)=> {
 		let {sipUsers} = this.props
+    let hasPoCDevice = false
 		const selectedUsers = data.map(id => {
-			return sipUsers.users.find(item => item.usr_number === id)
+			return sipUsers.users.find(item => {
+        if (item.usr_number === id && (item.usr_type.includes('poc')||item.usr_type.includes('dmr') || item.usr_type.includes('t3'))) hasPoCDevice = true
+        return item.usr_number === id
+      })
 		})
 
-		this.setState({selectedUsers})
+		this.setState({selectedUsers, hasPoCDevice})
 
 	}
 
@@ -88,8 +91,14 @@ class SipCall extends Component {
 			return user.usr_number != usr_number
 		}) : []
 
+    console.log(_selectedUsers, 1234)
+
     this.setState({selectedUsers: _selectedUsers})
     userRef && userRef.removeUserById(usr_number)
+
+    if (!_selectedUsers.length) {
+      this.setState({hasPoCDevice: false})
+    }
   }
 
 	usersOfUpMyself () {
@@ -102,7 +111,7 @@ class SipCall extends Component {
 				return true
 			} else {
 				myself = user
-				console.log(user)
+				// console.log(user)
 				return false
 			}
 		})
@@ -157,36 +166,30 @@ class SipCall extends Component {
 
 	componentDidMount () {
 		const { dispatch } = this.props;
+    const {usernumber, realm, pwd, data_url} = this.state
 		dispatch({
 			type: 'sipUsers/queryUsers',
 			payload: {
-				usernumber: this.state.usernumber,
-				pwd: this.state.pwd
+				usernumber: `${usernumber}@${realm}`,
+				pwd,
+        data_url
 			}
 		});
 		dispatch({
 			type: 'sipUsers/getOnlineUsers',
 			payload: {
-				usernumber: this.state.usernumber,
-				pwd: this.state.pwd
-			}
-		});
-		dispatch({
-			type: 'sipUsers/getCallRecords',
-			payload: {
-				usernumber: this.state.usernumber,
-				pwd: this.state.pwd,
-        moreParams: {
-          caller_id_number: '10010023'
-        }
+				usernumber: `${usernumber}@${realm}`,
+				pwd,
+        data_url
 			}
 		});
 		setInterval(() => {
 			dispatch({
 				type: 'sipUsers/getOnlineUsers',
 				payload: {
-					usernumber: this.state.usernumber,
-					pwd: this.state.pwd
+					usernumber: `${usernumber}@${realm}`,
+					pwd,
+          data_url
 				}
 			})
 		}, QUERY_ONLINE_DURATION)
@@ -214,7 +217,7 @@ class SipCall extends Component {
 
 	render () {
 		let {sipUsers, loading} = this.props
-		let {height, width, selectedUsers, usernumber, pwd, socket_url} = this.state
+		let {height, width, selectedUsers, hasPoCDevice, usernumber, pwd, socket_url, realm, data_url} = this.state
 
 		return(
 			<div
@@ -223,17 +226,22 @@ class SipCall extends Component {
 			>
 				<Users ref="users"
                height={height-112}
-							 width={width > 1500 ? 360 : 300}
+							 width={width > 1500 ? 360 : 260}
 							 users={this.usersOfUpMyself()}
 							 loading={loading}
 							 onlineIds={sipUsers.onlineUserIds}
 							 getSelectedUserIds={this.getSelectedUsers}
                onRef={this.onRef}
 							 usernumber={usernumber}
+               realm={realm}
+							 pwd={pwd}
+               dataUrl={data_url}
                callByOne={this.callByOne}
 				/>
 				<Call height={height-112}
 							selectedUsers={selectedUsers}
+              hasPoCDevice={hasPoCDevice}
+              users={this.usersOfUpMyself()}
               removeSelectedUser={this.removeSelectedUser}
               saveTempgroup={this.saveTempgroup}
               saveRecords={this.saveRecords}
@@ -245,14 +253,14 @@ class SipCall extends Component {
 				>
 					<History
             height={height - 332}
-            width={width > 1500 ? 360 : 300}
+            width={width > 1500 ? 360 : 260}
             onRecordsRef={this.onRecordsRef}
             usernumber={usernumber}
             tempCallByRecords={this.tempCallByRecords}
           />
 					<Tempgroups
             height={200}
-            width={width > 1500 ? 360 : 300}
+            width={width > 1500 ? 360 : 260}
             onTempGroupRef={this.onTempGroupRef}
             usernumber={usernumber}
 						tempCallByRecords={this.tempCallByRecords}

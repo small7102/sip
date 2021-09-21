@@ -33,6 +33,7 @@ export default class extends Component {
 		ringbackTone: null,
     netNormal: true,
     modalVisible: false,
+    halfCall: true,
     inpVal: '',
 		oConfigCall: {
 			bandwidth: { audio: undefined, video: undefined },
@@ -77,6 +78,7 @@ export default class extends Component {
   }
 
 	onSipEventStack (e) {
+    console.log(e, '事件回调')
 		switch (e.type) {
 			case 'started':
 				{
@@ -124,6 +126,29 @@ export default class extends Component {
 					} else {
             oSipSessionCall = e.newSession;
 						oSipSessionCall&&oSipSessionCall.setConfiguration(this.state.oConfigCall);
+
+            let usernumber = e.newSession &&  e.newSession.o_session && e.newSession.o_session.o_uri_from && e.newSession.o_session.o_uri_from.s_user_name
+            let content = !content && Array.isArray(e.content) && e.content.length && e.content
+            
+            if (Array.isArray(content) && content.length) {
+              let info = byteToString(content), infoUser
+
+              let infoArr = info.split('\r\n')
+              let cbInfo = arrToObjectBySmyble(infoArr)
+              let {action, status, state, result, count, number} = cbInfo
+
+              console.log(cbInfo, 12345)
+            }
+            if (usernumber) {
+              console.log(123456667777)
+              let user = this.props.users.find(item => item.usr_number == usernumber)
+              if (user) {
+                this.setState({calledUsers: [user], halfCall: false})
+              }
+
+
+            }
+
 					}
 					break;
 				}
@@ -134,7 +159,6 @@ export default class extends Component {
 					let netInfo = JSON.parse(byteToString(content))
 					netInfoObj[netInfo.exten] = netInfo
 
-					console.log(netInfo, netInfoObj, 123456)
 					this.setState({netInfoObj})
 					break;
 				}
@@ -145,7 +169,7 @@ export default class extends Component {
 	// 会话的回调
 	onSipEventSession (e) {
 		const {connectedMemberObj, calledUsers} = this.state
-    const {selectedUsers} = this.props
+    const {selectedUsers, hasPoCDevice} = this.props
 		const {type, session} = e
 		console.log(e)
 
@@ -158,9 +182,13 @@ export default class extends Component {
 				let bConnected = (type == 'connected');
 				if (session == oSipSessionRegister) { // 注册登录成功
 					this.setState({sipAvalible: true})
+          console.log('0000')
 				} else if (session == oSipSessionCall) {
-
-				}
+          console.log(1111)
+          this.setState({callConnected: true})
+          this.countTime()
+				} else {
+        }
 				break;
 			}
 			case 'i_ao_request':
@@ -183,6 +211,10 @@ export default class extends Component {
 			case 'sent_request': {
 				break;
 			}
+      case 'm_stream_audio_remote_added': {
+        if (hasPoCDevice) this.setState({callConnected: true})
+        break;
+      }
 			case 'i_info': {
 				if (session == oSipSessionCall) {
 					let content = !content && Array.isArray(e.content) && e.content.length && e.content
@@ -193,6 +225,8 @@ export default class extends Component {
 						let infoArr = info.split('\r\n')
 						let cbInfo = arrToObjectBySmyble(infoArr)
 						let {action, status, state, result, count, number} = cbInfo
+
+            console.log(cbInfo, 12345)
 
             if (state) {
               infoUser = selectedUsers.find(item => item.usr_number === cbInfo.number)
@@ -211,12 +245,17 @@ export default class extends Component {
 							})
 
 							this.countTime()
-						} else if (state == 'talking') {
-							// count: "2"
-							// level: "1"
-							// number: "10010023"
-							// pttid: "10010023"
-							// state: "talking
+						} else if (state == 'idle') {
+              // this.mMessage('info', '对方已拒接')
+              // oSipSessionCall = null;
+              // this.removeSelectedUser()
+              // this.setState({
+              //   calling: false,
+              //   calledUsers:[],
+              //   connectedMemberObj: null,
+              // })
+
+            } else if (state == 'talking') {
               this.setState({
                 talkingUser: {...infoUser}
               })
@@ -241,6 +280,7 @@ export default class extends Component {
 						else if (action == 'req') {
 							// 自己申请ptt
 							this.setState({ptting: status == 'ok' ? true : false})
+              if (status != 'ok') this.mMessage('warning', '通话被占用')
 						} else if (action == 'rel' && result == 'ok') {
 							// 自己释放ptt
 							this.setState({ptting: false})
@@ -265,7 +305,8 @@ export default class extends Component {
 						connectedMemberObj: null,
 						calledUsers: [],
 						duration: 0,
-						talkingUser: null
+						talkingUser: null,
+            halfCall: true
 					})
 					oSipSessionCall = null;
 					// 清除计时器
@@ -287,8 +328,8 @@ export default class extends Component {
 
 	// 开始拨号
 	sipCall () {
-    const {netNormal} = this.state
-    const {selectedUsers} = this.props
+    const {netNormal, halfCall} = this.state
+    const {selectedUsers, account} = this.props
 		if(!netNormal){
       this.mMessage('error', 'scoket连接失败')
       return
@@ -296,6 +337,20 @@ export default class extends Component {
 
 
     this.saveRecords()
+
+    if (!selectedUsers.length && this.state.calledUsers.length) { // 接听别人的通话
+      
+      if (!halfCall) {
+        oSipSessionCall.accept(this.state.oConfigCall)
+        console.log(account.usernumber, '发送接收指令')
+        return
+      } else {
+        oSipSessionCall.info(`state=add\r\ncount=2\r\nnumber=${account.usernumber}`,
+          'application/poc_msg',
+          this.state.oConfigCall
+          )
+      }
+    }
 
 		if (this.state.callConnected && oSipSessionCall) { //申请通话权限
 			oSipSessionCall.info(`action=req\r\nid=${this.state.sessionId}level=1`,
@@ -337,7 +392,6 @@ export default class extends Component {
 	}
 
   hangUp () {
-    console.log(oSipSessionCall,12345)
 		if (oSipSessionCall) {
 			oSipSessionCall.hangup({
 				events_listener: {
@@ -380,7 +434,7 @@ export default class extends Component {
       name: myself && myself.usr_name,
       time: new Date().getTime(),
       type: 0,
-      users: this.props.selectedUsers
+      users: this.props.selectedUsers.length ? this.props.selectedUsers : this.state.calledUsers
     }))
 
     records = records.splice(0,50)
@@ -561,7 +615,7 @@ export default class extends Component {
 
 	selectedUsersDom () {
 		const {selectedUsers=[]} = this.props
-    const {sessionId, talkingUser, calledUsers, connectedMemberObj, userCardSty} = this.state
+    const {sessionId, talkingUser, calledUsers, connectedMemberObj, userCardSty, halfCall, callConnected} = this.state
     const users = calledUsers.length ? calledUsers : selectedUsers || []
 		let sty = this.getUserCardStyleByNum(users.length)
 
@@ -571,13 +625,16 @@ export default class extends Component {
 							<li
 									key={user.usr_number + new Date().getTime()}
 									className={`${styles['selected-user-item']} ${styles[sty]} ${styles[userCardSty]} ${baseStyles['m-box-border']}`}>
-									<div className={`${styles['avatar-wrap']}`}>
+									<div
+                    className={`${styles['avatar-wrap']}`}
+                    style={{backgroundColor:  `${user.usr_type === 'dispatch' ? '#4e86c7' : '#87d068'}`}}
+                  >
 										<div className={`${styles['top-info']} ${baseStyles['flex']} ${baseStyles['align-center']}`}>
 
                       { sessionId ?
-                        [<span className={`${styles['state-icon']} ${styles[connectedMemberObj && connectedMemberObj[user.usr_number] ? 'light': 'dark']}`}></span>,
+                        [<span className={`${styles['state-icon']} ${styles[connectedMemberObj && connectedMemberObj[user.usr_number] || (!halfCall && callConnected) ? 'light': 'dark']}`}></span>,
                         <div className={`${baseStyles.ft12} ${styles['user-state']} ${baseStyles['flex-item']}`}>
-                          {connectedMemberObj && connectedMemberObj[user.usr_number] ? '已接入' : '连接中'}
+                          {connectedMemberObj && connectedMemberObj[user.usr_number] || (!halfCall && callConnected) ? '已接入' : '连接中'}
                         </div>] : <Icon type="close"
                               className={`${baseStyles['pointer']}`}
                               onClick={this.removeSelectedUser.bind(this, user.usr_number)}
@@ -590,7 +647,16 @@ export default class extends Component {
 												this.signalDom(user.usr_number)
 											}
 										</div>
-										<img src="https://hbimg.huabanimg.com/2d431c924927b2968d26722f519ae7ed38094e36d192-34zNAY_fw658/format/webp"/>
+                      <div
+                        className={`${baseStyles.w100} ${baseStyles.flex} ${baseStyles['justify-center']} ${baseStyles['align-center']}`}
+                        style={{height: '100%'}}
+                      >
+                          <i
+                            className={`${iconfont['m-icon']} ${iconfont[user.usr_type === 'dispatch' ? 'icon-diannao' : 'icon-chengyuan']}`}
+                            style={{fontSize: `${user.usr_type === 'dispatch' ? 40 : 53}px`}}
+                          ></i>
+                      </div>
+										{/* <img src="https://hbimg.huabanimg.com/2d431c924927b2968d26722f519ae7ed38094e36d192-34zNAY_fw658/format/webp"/> */}
 									</div>
 									<div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${styles['sub-info']}`}>
 										<span className={`${styles.name} ${baseStyles['flex-item']} ${baseStyles['text-overflow']}`}>
@@ -607,7 +673,10 @@ export default class extends Component {
 
   tipsDom () {
     return (
-      <div className={`${baseStyles.flex} ${baseStyles.h100} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}>
+      <div
+				className={`${baseStyles.flex} ${baseStyles.h100} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
+				style={{marginBottom: -141, color: 'rgba(255,255,255,.5)'}}
+			>
         <i className={`${iconfont['m-icon']} ${iconfont['icon-tixing']}`}
            style={{color: '#F4B754'}}
         ></i>
@@ -618,7 +687,8 @@ export default class extends Component {
 
 
   createHandlers = () => {
-    const { callConnected, calling, ptting } = this.state
+    const {selectedUsers} = this.props
+    const { callConnected, calling, ptting, calledUsers, halfCall } = this.state
     return (<div className={`${styles.handlers} ${baseStyles['flex']} ${baseStyles['justify-center']} ${baseStyles['align-center']}`}>
      <div className={`${styles['handler-item']}`}
           onClick={this.hangUp}
@@ -629,7 +699,7 @@ export default class extends Component {
        <span className={styles['btn-text']}>{callConnected ? '挂断' : '取消'}</span>
      </div>
      {
-       callConnected ?
+       callConnected ? halfCall && 
         (
           <div className={`${styles['handler-item']} ${baseStyles['pr']}`}
 								onClick={ptting ? this.stopPtt : this.sipCall}>
@@ -641,18 +711,19 @@ export default class extends Component {
               this.talkingDom('ptt-ani') : ''
             }
           </div>
-        ) :
+        ) : 
         (
           <div className={`${styles['handler-item']}`}>
             <div id="create"
                  className={`${styles['create']} ${styles['handler-center']} ${styles['handler-item-circle']} ${baseStyles['pr']}`}
+                 style={{backgroundColor: `${calledUsers.length && !selectedUsers.length ? '#87d068' : '#3e79f2'}`}}
                  onClick={this.sipCall}
             >
               <i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft60']}`}></i>
 
               {calling && this.callingDom()}
             </div>
-            <span className={styles['btn-text']}>{calling ? '连接中...' : '创建'}</span>
+            <span className={styles['btn-text']}>{calling ? '连接中...' : calledUsers.length && !selectedUsers.length ? '接听' : '创建'}</span>
           </div>
         )
      }
@@ -670,7 +741,7 @@ export default class extends Component {
 
 	render () {
     const { height, selectedUsers } = this.props;
-		const { calling, talkingUser, duration, modalVisible, inpVal} = this.state
+		const { callConnected, calling, talkingUser, duration, modalVisible, inpVal, calledUsers, halfCall} = this.state
 
 		return (
 			<div className={`m-call-wrap ${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
@@ -683,7 +754,6 @@ export default class extends Component {
 				<audio id="audio_remote" autoPlay></audio>
 				<audio id="ringbackTone" autoPlay={calling ? true : false} loop src={ringbacktoneSrc}>
 				</audio>
-				<audio id="audio_remote" autoPlay></audio>
 				<div className={`${baseStyles.h100} ${baseStyles['direction-col']} ${baseStyles['flex']} ${baseStyles['justify-center']}`}
 				>
 					<ul className={`${styles['selected-user-wrap']} ${baseStyles.flex} ${baseStyles['justify-center']} ${baseStyles['scroll-bar']}`}
@@ -695,10 +765,10 @@ export default class extends Component {
 							{duration ? this.formatDuration() : ''}
 						</div>
 						<div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-center']} ${styles['center-info']}`}>
-							{talkingUser ? `${talkingUser.usr_name}正在说话...` : ''}
+							{talkingUser ? `${talkingUser.usr_name}正在说话...` : !halfCall ? callConnected ? '通话已连接' : calledUsers[0].usr_name+'正在邀请你通话...' : ''}
 						</div>
 					</div>
-					{ selectedUsers.length ? this.createHandlers() : this.tipsDom()}
+					{ selectedUsers.length || calledUsers.length ? this.createHandlers() : this.tipsDom()}
 				</div>
 
         <Modal

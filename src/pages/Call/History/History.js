@@ -56,7 +56,7 @@ export default class History extends Component {
     return (
       <div
         className={`${baseStyles.flex} ${baseStyles.ft13} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
-        style={{lineHeight: `${height-60}px`}}
+        style={{lineHeight: `${height-60}px`, color: 'rgba(255,255,255,.5)'}}
       >
         暂无数据
       </div>

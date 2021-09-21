@@ -34,9 +34,9 @@
 }
 .call-wrap .selected-user-wrap {
   width: 90%;
-  margin: 40px auto;
+  margin: 30px auto;
   flex-wrap: wrap;
-  max-height: 75%;
+  max-height: 80%;
 }
 .call-wrap .selected-user-item {
   background: #183473;
@@ -325,7 +325,7 @@
 }
 @media (max-width: 1600px) {
   .call-wrap .selected-user-wrap {
-    max-height: 80%;
+    max-height: 90%;
   }
   .call-wrap .small {
     height: 136px;
@@ -351,18 +351,18 @@
     height: 140px;
   }
   .call-wrap .medium {
-    height: 160px;
-    width: 125px;
+    height: 133px;
+    width: 110px;
   }
   .call-wrap .medium .avatar-wrap {
-    width: 125px;
-    height: 125px;
+    width: 110px;
+    height: 110px;
   }
   .call-wrap .medium .top-info {
-    height: 25px;
+    height: 20px;
   }
   .call-wrap .medium .name {
-    line-height: 30px;
+    line-height: 22px;
     font-size: 13px;
   }
 }

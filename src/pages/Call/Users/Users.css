@@ -1,8 +1,16 @@
-.list-wrap {
+.m-inp {
   overflow: auto;
 }
-.list-wrap :global .ant-input {
+.m-inp :global .ant-input {
   background: #16255b;
+  border: 1px solid #7f89e2;
+}
+.m-inp :global .ant-checkbox-inner {
+  background: none;
+  border: 1px solid #7f89e2;
+}
+.m-inp :global .ant-checkbox-disabled .ant-checkbox-inner {
+  background: none;
   border: 1px solid #7f89e2;
 }
 .pop :global .ant-popover-inner {
@@ -48,12 +56,10 @@
   border: 1px solid #3c5086;
   border-radius: 6px;
   padding: 0 10px;
-  box-shadow: 0 -7px 16px 0 #ffe8e826;
 }
 .arrow-wrap::after {
   position: absolute;
   content: '';
-  top: -5px;
   right: 10px;
   height: 0;
   width: 0;
@@ -61,8 +67,22 @@
   filter: drop-shadow(0 2px 12px rgba(255, 255, 255, 0.03));
   border-color: transparent;
   border-style: solid;
+}
+.arrow-up {
+  box-shadow: 0 -7px 16px 0 #ffe8e826;
+}
+.arrow-up::after {
+  top: -5px;
   border-bottom-color: #111e4d;
   border-top-width: 0;
+}
+.arrow-down {
+  box-shadow: 0 7px 16px 0 #ffe8e826;
+}
+.arrow-down::after {
+  bottom: -5px;
+  border-top-color: #111e4d;
+  border-bottom-width: 0;
 }
 .arrow-wrap li {
   line-height: 32px;

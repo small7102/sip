@@ -19,7 +19,7 @@ var tsip_event_type_e =
     STACK: 21
 };
 
-var tsip_event_code_e = 
+var tsip_event_code_e =
 {
     // 100-699 are SIP reserved codes
 
@@ -51,11 +51,11 @@ var tsip_event_code_e =
     STACK_STOPPING: 952,
     STACK_STOPPED: 953,
     STACK_FAILED_TO_START: 954,
-    STACK_FAILED_TO_STOP: 955
+    STACK_FAILED_TO_STOP: 955,
 };
 
 function tsip_event(o_session, i_code, s_phrase, o_message, e_type) {
-    this.init(o_session, i_code, s_phrase, o_message, e_type);  
+    this.init(o_session, i_code, s_phrase, o_message, e_type);
 }
 
 tsip_event.prototype.init = function (o_session, i_code, s_phrase, o_message, e_type) {
@@ -115,7 +115,7 @@ tsip_event.prototype.signal = function () {
     if (this.o_session.on_event && this.is_type_session()) {
         setTimeout(function () { This.o_session.on_event(This) }, 1);
     }
-    
+
     switch (this.e_type) {
         case tsip_event_type_e.DIALOG:
             {
