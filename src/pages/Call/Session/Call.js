@@ -77,6 +77,11 @@ export default class extends Component {
     message[type](text)
   }
 
+	ringbackTone () {
+		// let ringbackTone = document.getElementById('ringbackTone')
+		// ringbackTone.play()
+	}
+
 	onSipEventStack (e) {
     console.log(e, '事件回调')
 		switch (e.type) {
@@ -128,27 +133,19 @@ export default class extends Component {
 						oSipSessionCall&&oSipSessionCall.setConfiguration(this.state.oConfigCall);
 
             let usernumber = e.newSession &&  e.newSession.o_session && e.newSession.o_session.o_uri_from && e.newSession.o_session.o_uri_from.s_user_name
-            let content = !content && Array.isArray(e.content) && e.content.length && e.content
+						if (e.call_info) {
+							let info = e.call_info.replace('<members=', '').split('#')
+							usernumber = info[0]
+						}
             
-            if (Array.isArray(content) && content.length) {
-              let info = byteToString(content), infoUser
-
-              let infoArr = info.split('\r\n')
-              let cbInfo = arrToObjectBySmyble(infoArr)
-              let {action, status, state, result, count, number} = cbInfo
-
-              console.log(cbInfo, 12345)
-            }
             if (usernumber) {
-              console.log(123456667777)
               let user = this.props.users.find(item => item.usr_number == usernumber)
               if (user) {
-                this.setState({calledUsers: [user], halfCall: false})
+                this.setState({calledUsers: [user], halfCall: e.call_info ? true : false})
               }
-
-
             }
 
+						this.ringbackTone()
 					}
 					break;
 				}
@@ -170,9 +167,9 @@ export default class extends Component {
 	onSipEventSession (e) {
 		const {connectedMemberObj, calledUsers} = this.state
     const {selectedUsers, hasPoCDevice} = this.props
-		const {type, session} = e
-		console.log(e)
+		const {type, session, description} = e
 
+		console.log(e,123)
 		switch (type) {
 			case 'connecting': {
 				break;
@@ -182,11 +179,11 @@ export default class extends Component {
 				let bConnected = (type == 'connected');
 				if (session == oSipSessionRegister) { // 注册登录成功
 					this.setState({sipAvalible: true})
-          console.log('0000')
 				} else if (session == oSipSessionCall) {
-          console.log(1111)
-          this.setState({callConnected: true})
-          this.countTime()
+					if (description === 'In call') {
+						this.setState({callConnected: true})
+						this.countTime()
+					}
 				} else {
         }
 				break;
@@ -353,7 +350,7 @@ export default class extends Component {
     }
 
 		if (this.state.callConnected && oSipSessionCall) { //申请通话权限
-			oSipSessionCall.info(`action=req\r\nid=${this.state.sessionId}level=1`,
+			oSipSessionCall.info(`action=req\r\nid=${this.state.sessionId}\r\nlevel=1`,
 				'application/poc_msg',
 				this.state.oConfigCall
 			)
@@ -385,7 +382,7 @@ export default class extends Component {
 	}
 
 	stopPtt () {
-		oSipSessionCall.info(`action=rel\r\nid=${this.state.sessionId}level=1`,
+		oSipSessionCall.info(`action=rel\r\nid=${this.state.sessionId}\r\nlevel=1`,
 			'application/poc_msg',
 			this.state.oConfigCall
 		)
@@ -429,11 +426,15 @@ export default class extends Component {
 
   saveRecords () {
     const {usernumber, myself} = this.props.account
+		const {selectedUsers} = this.props	
+		const {calledUsers} = this.state
+
     let records = Storage.localGet(`${usernumber}records`) || []
+		let callType = calledUsers.length && !selectedUsers.length ? 1 : 0
     records.unshift(JSON.stringify({
-      name: myself && myself.usr_name,
+      name: callType ? calledUsers[0].usr_number : myself && myself.usr_name,
       time: new Date().getTime(),
-      type: 0,
+      type: callType,
       users: this.props.selectedUsers.length ? this.props.selectedUsers : this.state.calledUsers
     }))
 
@@ -605,7 +606,7 @@ export default class extends Component {
 						style={{height: `${(netLevel-1)*4 || 2}px`}}
 					>
 						<i className={`${styles['inner-icon']} ${baseStyles['pa']} ${iconfont['m-icon']} ${iconfont['icon-wifi-outline']}`}
-							style={{bottom: '-8px'}}
+							// style={{bottom: '-8px'}}
 						></i>
 					</div>
 				</div>
@@ -752,7 +753,7 @@ export default class extends Component {
         <i className={`${iconfont['m-icon']} ${iconfont['icon-pronunciatio']} ${styles['bg-icon']}`}
         ></i>
 				<audio id="audio_remote" autoPlay></audio>
-				<audio id="ringbackTone" autoPlay={calling ? true : false} loop src={ringbacktoneSrc}>
+				<audio id="ringbackTone" muted autoPlay loop src={ringbacktoneSrc}>
 				</audio>
 				<div className={`${baseStyles.h100} ${baseStyles['direction-col']} ${baseStyles['flex']} ${baseStyles['justify-center']}`}
 				>

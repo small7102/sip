@@ -419,6 +419,7 @@ function __tsip_transport_ws_onmessage(evt) {
     }
     var o_message = tsip_message.prototype.Parse(o_ragel_state, true);
 
+    console.log(o_message, 'xxxx')
     if (o_message) {
         tsk_utils_log_info("recv=" + o_message);
         o_message.o_socket = this;

@@ -828,6 +828,7 @@ SIPml.Stack = function (o_conf) {
 
     // listen for stack events
     this.o_stack.on_event_stack = function (e) {
+        console.log('stack: ',e)
         var s_type;
         switch (e.i_code) {
             case tsip_event_code_e.STACK_STARTING: s_type = 'starting'; break;
@@ -845,6 +846,7 @@ SIPml.Stack = function (o_conf) {
 
     // listen for dialog events
     this.o_stack.on_event_dialog = function (e) {
+        console.log('dialog: ',e)
         var s_type = null;
         var i_session_id = e.o_session.i_id;
         var oSession = e.o_session.o_stack.oStack.ao_sessions[i_session_id];
@@ -884,6 +886,7 @@ SIPml.Stack = function (o_conf) {
 
     // listen for MESSAGE events
     this.o_stack.on_event_message = function (e) {
+        console.log('信息回调：', e)
         var s_type = null;
         var i_session_id = e.o_session.i_id;
         var oSession = e.o_session.o_stack.oStack.ao_sessions[i_session_id];
@@ -917,6 +920,7 @@ SIPml.Stack = function (o_conf) {
 
     // listen for PUBLISH events
     this.o_stack.on_event_publish = function (e) {
+        console.log('on_event_publish', e)
         var s_type = null;
         var i_session_id = e.o_session.i_id;
         var oSession = e.o_session.o_stack.oStack.ao_sessions[i_session_id];
@@ -942,6 +946,7 @@ SIPml.Stack = function (o_conf) {
 
     // listen for SUBSCRIBE events
     this.o_stack.on_event_subscribe = function (e) {
+        console.log('订阅回调',e)
         var s_type = null;
         var i_session_id = e.o_session.i_id;
         var oSession = e.o_session.o_stack.oStack.ao_sessions[i_session_id];
@@ -974,6 +979,7 @@ SIPml.Stack = function (o_conf) {
 
     // listen for INVITE events
     this.o_stack.on_event_invite = function (e) {
+        // console.log('邀请回调：', e)
       var s_type = null;
       var i_session_id = e.o_session.i_id;
       var oSession = e.o_session.o_stack.oStack.ao_sessions[i_session_id];
@@ -1028,7 +1034,6 @@ SIPml.Stack = function (o_conf) {
         }
 
         var dispatchEvent = function (s_event_type) {
-          console.log(s_event_type, '事件类型')
             if (s_event_type) {
                 // 'i_new_call', 'm_permission_requested', 'm_permission_accepted' and 'm_permission_refused' are stack-level event
                 switch (s_event_type) {
@@ -1037,13 +1042,13 @@ SIPml.Stack = function (o_conf) {
                     case 'm_permission_accepted':
                     case 'm_permission_refused':
                         {
-                          console.log(e, '被邀请通话的事件回调')
                             var oNewEvent = new SIPml.Stack.Event(s_event_type, e);
                             if (s_event_type == 'i_new_call') {
                                 oNewEvent.newSession = new SIPml.Session.Call(e.o_session);
                                 e.o_session.o_stack.oStack.ao_sessions[i_session_id] = oNewEvent.newSession; // save session
                             }
                             oNewEvent.content = e.o_message && e.o_message.o_content || []
+                            oNewEvent.call_info = e.o_message && e.o_message.o_hdr_Call_Info && e.o_message.o_hdr_Call_Info.s_value
                             e.o_session.o_stack.oStack.dispatchEvent({ s_type: s_event_type, o_value: oNewEvent });
                             break;
                         }
@@ -1191,7 +1196,6 @@ SIPml.Stack.prototype.setConfiguration = function (o_conf) {
                      tsip_stack.prototype.SetBandwidth(o_bandwidth),
                      tsip_stack.prototype.SetVideoSize(o_video_size));
 
-    console.log(o_conf.sip_headers,12121212)
     // add sip headers
     if (o_conf.sip_headers) {
         o_conf.sip_headers.forEach(function (o_header) {
@@ -1299,7 +1303,6 @@ SIPml.Stack.prototype.newSession = function (s_type, o_conf) {
 
     o_session.b_local = true; // locally created session
 
-    console.log(o_conf, s_type, 7777777777777)
     var oSession = new cls(o_session, o_conf);
     this.ao_sessions[oSession.getId()] = oSession;
     return oSession;
@@ -1696,6 +1699,8 @@ SIPml.Session.Call.prototype.call = function (s_to, o_conf) {
             value: `members=${o_conf.members}`
         })
     }
+
+    console.log(o_conf, 7878787878)
     this.setConfiguration(o_conf);
     // make call
     return this.o_session.call(this.mediaType);

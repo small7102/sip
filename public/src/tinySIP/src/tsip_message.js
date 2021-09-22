@@ -59,6 +59,7 @@ function tsip_message(e_type) {
 
     this.o_hdr_Content_Type = null;
     this.o_hdr_Content_Length = null;
+    this.o_hdr_Call_Info = null
 
     this.o_content = null;
 
@@ -109,6 +110,7 @@ function tsip_response(i_status_code, s_reason_phrase, o_request) {
 	*/
 	this.o_hdr_From = o_request.o_hdr_From;
 	this.o_hdr_Call_ID = o_request.o_hdr_Call_ID;
+    this.o_hdr_Call_Info = o_request.o_hdr_Call_Info;
 	this.o_hdr_CSeq = o_request.o_hdr_CSeq;
 	this.o_hdr_firstVia = o_request.o_hdr_firstVia;
 	/* All other VIAs */
@@ -248,6 +250,16 @@ tsip_message.prototype.add_header = function (o_hdr, b_top) {
                 }
                 break;
             }
+        case tsip_header_type_e.Dummy: {
+            if (!this.o_hdr_Call_Info && o_hdr && o_hdr.s_name === 'Call-Info') {
+                this.o_hdr_Call_Info = o_hdr;
+                return 0;
+            }
+            break;
+        }
+        default: {
+            break;
+        }
     }
 
     if (b_top) {
@@ -342,6 +354,13 @@ tsip_message.prototype.get_header_at = function (e_hdr_type, i_index) {
             {
                 if (i_index == 0) {
                     return this.o_hdr_Content_Length;
+                }
+                ++i_pos;
+                break;
+            }
+            case tsip_header_type_e.Call_Info: {
+                if (i_index == 0) {
+                    return this.o_hdr_Call_Info;
                 }
                 ++i_pos;
                 break;
@@ -534,6 +553,10 @@ tsip_message.prototype.toString = function () {
     /* Content-Length*/
     if (this.o_hdr_Content_Length) {
         s_str += this.o_hdr_Content_Length.tostring_full();
+    }
+    /* Call_Info*/
+    if (this.o_hdr_Call_Info) {
+        s_str += this.o_hdr_Call_Info.tostring_full();
     }
 
     /* All other headers */
