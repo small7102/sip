@@ -7,12 +7,14 @@ const ringbacktoneSrc = require('../assets/sounds/ringbacktone.wav')
 const ringtoneSrc = require('../assets/sounds/ringtone.wav')
 import {byteToString, arrToObjectBySmyble, sendsFormat} from '../utils'
 import Storage from '../utils/localStore'
+import Settings from '../Settings'
 
 let oSipStack = null
 let oSipSessionRegister = null
 let oSipSessionCall = null
 let oSipSessionMessage = null
 let timer = null
+let waitingTimer = null
 
 export default class extends Component {
 
@@ -55,6 +57,8 @@ export default class extends Component {
     calledUsers: [],//已经创建呼叫的成员
 		netInfoObj: {},
 		duration: 0,
+    autoAnswer: false,
+    waitingDuration: 30,
 		loginConfig: {
 			enable_early_ims: true,
 			enable_media_stream_cache: false,
@@ -142,10 +146,10 @@ export default class extends Component {
               let user = this.props.users.find(item => item.usr_number == usernumber)
               if (user) {
                 this.setState({calledUsers: [user], halfCall: e.call_info ? true : false})
+                this.ringbackTone()
+                this.handleAutoAnswer()
               }
             }
-
-						this.ringbackTone()
 					}
 					break;
 				}
@@ -194,6 +198,7 @@ export default class extends Component {
 						let iSipResponseCode = e.getSipResponseCode();
 						if (iSipResponseCode == 180 || iSipResponseCode == 183) {
 								this.setState({calling: true})
+                this.waitingTimeCount('按时无人接听')
 						}
 				}
 				break;
@@ -242,27 +247,17 @@ export default class extends Component {
 							})
 
 							this.countTime()
-						} else if (state == 'idle') {
-              // this.mMessage('info', '对方已拒接')
-              // oSipSessionCall = null;
-              // this.removeSelectedUser()
-              // this.setState({
-              //   calling: false,
-              //   calledUsers:[],
-              //   connectedMemberObj: null,
-              // })
-
-            } else if (state == 'talking') {
+						} else if (state == 'talking') {
               this.setState({
                 talkingUser: {...infoUser}
               })
+              this.waitingTimeCount('守候超时')
 						} else if (state == 'release') {
-							// count: "2"
-							// number: "10010023"
-							// state: "release"
               this.setState({
                 talkingUser: null
               })
+              clearInterval(waitingTimer)
+              waitingTimer = null
 						} else if (state == 'del') {
 							// count: "1", state: "del", number: "10010023"
               this.mMessage('info',`${infoUser.usr_name}结束通话`)
@@ -308,12 +303,31 @@ export default class extends Component {
 					oSipSessionCall = null;
 					// 清除计时器
 					clearInterval(timer)
+					clearInterval(waitingTimer)
           timer = null
+          waitingTimer = null
 				}
 				break;
 			}
 		}
 	}
+
+  handleAutoAnswer () {
+    if (this.state.autoAnswer) {
+      this.sipCall()
+    }
+  }
+
+  waitingTimeCount (text) {
+    let waiting = 0
+    waitingTimer = setInterval(() => {
+      waiting++
+      if (waiting>=this.state.waitingDuration) {
+        this.hangUp()
+        this.mMessage('warning', text)
+      }
+    })
+  }
 
 	randomRoom () {
 		let roomId = '111'
@@ -462,7 +476,7 @@ export default class extends Component {
   }
 
   handleCancel () {
-    this.setState({modalVisible: false, inpVal: false})
+    this.setState({modalVisible: false, inpVal: ''})
   }
 
   changeInpVal (e) {
@@ -506,7 +520,22 @@ export default class extends Component {
       top: (height+140)/2 - 20,
       duration: 3,
     });
+
 	}
+  
+  getLocalSettings () {
+    const {account} = this.props
+
+    let settings = Storage.localGet(`${account.usernumber}settings`)
+  
+    if (settings) {
+      settings = JSON.parse(settings)
+      this.setState({
+        autoAnswer: settings.autoAnswer,
+        waitingDuration: settings.waitingDuration,
+      })
+    }
+  }
 
   newSip () {
     const { loginConfig } = this.state
@@ -741,7 +770,7 @@ export default class extends Component {
  )};
 
 	render () {
-    const { height, selectedUsers } = this.props;
+    const { height, selectedUsers, account } = this.props;
 		const { callConnected, calling, talkingUser, duration, modalVisible, inpVal, calledUsers, halfCall} = this.state
 
 		return (
@@ -752,6 +781,7 @@ export default class extends Component {
 				<h2 className={styles.title}>语音通话</h2>
         <i className={`${iconfont['m-icon']} ${iconfont['icon-pronunciatio']} ${styles['bg-icon']}`}
         ></i>
+        <Settings mMessage={this.mMessage} getLocalSettings={this.getLocalSettings} usernumber={account.usernumber}/>
 				<audio id="audio_remote" autoPlay></audio>
 				<audio id="ringbackTone" muted autoPlay loop src={ringbacktoneSrc}>
 				</audio>
@@ -777,6 +807,7 @@ export default class extends Component {
           visible={modalVisible}
           className={styles.modal}
           footer={null}
+          onCancel={this.handleCancel}
         >
           <Input
             size="large"

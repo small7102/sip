@@ -1700,7 +1700,6 @@ SIPml.Session.Call.prototype.call = function (s_to, o_conf) {
         })
     }
 
-    console.log(o_conf, 7878787878)
     this.setConfiguration(o_conf);
     // make call
     return this.o_session.call(this.mediaType);

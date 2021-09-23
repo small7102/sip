@@ -33,8 +33,8 @@ class SipCall extends Component {
 	state = {
 		height: 1080,
 		width: 1920,
-		usernumber: '10010128',
-		pwd: '496369',
+		usernumber: '10010022',
+		pwd: '228304',
     realm: 'kinet',
 		socket_url: 'wss://183.47.46.242:7443/',
     data_url: 'http://183.47.46.242:8008',
