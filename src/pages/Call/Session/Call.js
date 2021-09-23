@@ -28,6 +28,7 @@ export default class extends Component {
 		this.handleCancel = this.handleCancel.bind(this)
 		this.changeInpVal = this.changeInpVal.bind(this)
 		this.removeSelectedUser = this.removeSelectedUser.bind(this)
+		this.getLocalSettings = this.getLocalSettings.bind(this)
 	}
 	state = {
 		sipAvalible: false,
@@ -137,9 +138,11 @@ export default class extends Component {
 						oSipSessionCall&&oSipSessionCall.setConfiguration(this.state.oConfigCall);
 
             let usernumber = e.newSession &&  e.newSession.o_session && e.newSession.o_session.o_uri_from && e.newSession.o_session.o_uri_from.s_user_name
+						console.log('eeeeeee', e, e.newSession.o_session.i_id)
 						if (e.call_info) {
 							let info = e.call_info.replace('<members=', '').split('#')
 							usernumber = info[0]
+							this.setState({sessionId: e.newSession.o_session.i_id})
 						}
             
             if (usernumber) {
@@ -197,8 +200,6 @@ export default class extends Component {
 				if (session == oSipSessionCall) {
 						let iSipResponseCode = e.getSipResponseCode();
 						if (iSipResponseCode == 180 || iSipResponseCode == 183) {
-								this.setState({calling: true})
-                this.waitingTimeCount('按时无人接听')
 						}
 				}
 				break;
@@ -227,18 +228,16 @@ export default class extends Component {
 						let infoArr = info.split('\r\n')
 						let cbInfo = arrToObjectBySmyble(infoArr)
 						let {action, status, state, result, count, number} = cbInfo
-
             console.log(cbInfo, 12345)
-
             if (state) {
-              infoUser = selectedUsers.find(item => item.usr_number === cbInfo.number)
+							let users = selectedUsers.length > 0 ? selectedUsers : this.state.calledUsers 
+              infoUser = users.find(item => item.usr_number === cbInfo.number)
             }
 						if (state == 'add') {
 							let obj = connectedMemberObj ? {...connectedMemberObj} : {}
 							// 有人加进会话
 							obj[cbInfo.number] = cbInfo
               this.mMessage('info',`${infoUser.usr_name}接入会话`)
-
 
 							this.setState({
 								callConnected: true,
@@ -247,17 +246,17 @@ export default class extends Component {
 							})
 
 							this.countTime()
+							clearInterval(this.waitingTimer)
+							this.waitingTimer=null
 						} else if (state == 'talking') {
+							console.log('tttttttttt', infoUser)
               this.setState({
                 talkingUser: {...infoUser}
               })
-              this.waitingTimeCount('守候超时')
 						} else if (state == 'release') {
               this.setState({
                 talkingUser: null
               })
-              clearInterval(waitingTimer)
-              waitingTimer = null
 						} else if (state == 'del') {
 							// count: "1", state: "del", number: "10010023"
               this.mMessage('info',`${infoUser.usr_name}结束通话`)
@@ -315,18 +314,25 @@ export default class extends Component {
   handleAutoAnswer () {
     if (this.state.autoAnswer) {
       this.sipCall()
-    }
+    } else {
+			this.waitingTimeCount('通话已取消')
+			this.setState({calling: true})
+		}
   }
 
   waitingTimeCount (text) {
     let waiting = 0
+		console.log(text)
     waitingTimer = setInterval(() => {
+			console.log(waiting,this.state.waitingDuration,4444)
       waiting++
       if (waiting>=this.state.waitingDuration) {
         this.hangUp()
         this.mMessage('warning', text)
+				clearInterval(waitingTimer)
+				waitingTimer = null
       }
-    })
+    },1000)
   }
 
 	randomRoom () {
@@ -339,28 +345,25 @@ export default class extends Component {
 
 	// 开始拨号
 	sipCall () {
-    const {netNormal, halfCall} = this.state
+    const {netNormal, halfCall, calledUsers} = this.state
     const {selectedUsers, account} = this.props
 		if(!netNormal){
       this.mMessage('error', 'scoket连接失败')
       return
     }
 
-
     this.saveRecords()
 
-    if (!selectedUsers.length && this.state.calledUsers.length) { // 接听别人的通话
-      
-      if (!halfCall) {
-        oSipSessionCall.accept(this.state.oConfigCall)
-        console.log(account.usernumber, '发送接收指令')
-        return
-      } else {
-        oSipSessionCall.info(`state=add\r\ncount=2\r\nnumber=${account.usernumber}`,
-          'application/poc_msg',
-          this.state.oConfigCall
-          )
-      }
+    if (!selectedUsers.length && this.state.calledUsers.length && !this.state.callConnected) { // 接听别人的通话
+      this.setState({calling: false})
+			clearInterval(waitingTimer)
+			waitingTimer = null
+			oSipSessionCall.accept(this.state.oConfigCall)
+			let obj = {}
+			obj[this.state.calledUsers[0].usr_number] = this.state.calledUsers[0]
+			this.setState({connectedMemberObj: obj})
+			console.log(account.usernumber, '发送接收指令')
+			return
     }
 
 		if (this.state.callConnected && oSipSessionCall) { //申请通话权限
@@ -370,10 +373,12 @@ export default class extends Component {
 			)
 			return
 		}
+
 		if (oSipStack && !oSipSessionCall) {
 			oSipSessionCall = oSipStack.newSession('call-audio', this.state.oConfigCall)
 
 			this.setState({sessionId: oSipSessionCall.o_session.i_id, calling: true})
+			this.waitingTimeCount('通话已取消')
 
 			let roomId = this.randomRoom()
 			let config = {...this.state.oConfigCall}
@@ -389,7 +394,6 @@ export default class extends Component {
 			} else {
         this.setState({calledUsers: [...selectedUsers]})
       }
-
 		} else if (oSipSessionCall) {
 			// oSipSessionCall.accept(this.state.oConfigCall)
 		}
@@ -520,7 +524,7 @@ export default class extends Component {
       top: (height+140)/2 - 20,
       duration: 3,
     });
-
+		this.getLocalSettings()
 	}
   
   getLocalSettings () {
