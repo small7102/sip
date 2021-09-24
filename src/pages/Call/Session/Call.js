@@ -250,7 +250,6 @@ export default class extends Component {
                 this.waitingTimeCount()
                 this.countTime()
               }
-
 							this.setState({
 								callConnected: true,
 								calling: false,
@@ -356,10 +355,14 @@ export default class extends Component {
 
 	// 开始拨号
 	sipCall () {
-    const {netNormal, calledUsers, oConfigCall, callConnected} = this.state
+    const {netNormal, calledUsers, oConfigCall, callConnected, sipAvalible} = this.state
     const {selectedUsers, account} = this.props
 		if(!netNormal){
       this.mMessage('error', 'scoket连接失败')
+      return
+    }
+		if(!sipAvalible){
+      this.mMessage('error', 'scoket连接中...')
       return
     }
 
