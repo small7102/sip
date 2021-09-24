@@ -42,8 +42,9 @@ export default class History extends Component {
               this.handleCallback(item)
             }}
         >
-          <div className={[baseStyles['flex-item']]}>
-            <div className={styles['name']}>{item.name}</div>
+          <div className={`${baseStyles['flex-item']} ${baseStyles['text-overflow']}`}>
+            {/* <div className={styles['name']}>989898989898989898,sgdgggg,erejhjhjhjhjj,wewe</div> */}
+            <div className={`${styles['name']} ${baseStyles['text-overflow']}`}>{item.name}</div>
             <div className={styles['sub-info']}>{dateFmt('yyyy-MM-dd hh:mm:ss',new Date(item.time))}  {item.type ? '呼入': '呼出'}</div>
           </div>
           <Icon type="right" />
