@@ -252,6 +252,7 @@ export default class extends Component {
                 this.waitingTimeCount()
                 this.countTime()
               }
+
 							this.setState({
 								callConnected: true,
 								calling: false,
