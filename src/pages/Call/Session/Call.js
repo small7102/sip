@@ -190,7 +190,7 @@ export default class extends Component {
 					if (description === 'In call') {
 						this.setState({callConnected: true})
 						this.countTime()
-            this.waitingTimeCount()
+            if (this.state.halfCall) this.waitingTimeCount()
 					}
 				} else {
         }
