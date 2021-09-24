@@ -464,10 +464,17 @@ export default class extends Component {
 		const {selectedUsers} = this.props	
 		const {calledUsers} = this.state
 
-    let records = Storage.localGet(`${usernumber}records`) || []
-		let callType = calledUsers.length && !selectedUsers.length ? 1 : 0
+    let records = Storage.localGet(`${usernumber}records`) || [],name,
+		    callType = calledUsers.length && !selectedUsers.length ? 1 : 0
+    if (!callType) {
+      name = selectedUsers.map(item => item.usr_name)
+      name = name.length ? name.join(',') : ''
+    } else {
+      name = calledUsers[0].usr_number 
+    }
+ 
     records.unshift(JSON.stringify({
-      name: callType ? calledUsers[0].usr_number : myself && myself.usr_name,
+      name,
       time: new Date().getTime(),
       type: callType,
       users: this.props.selectedUsers.length ? this.props.selectedUsers : this.state.calledUsers
