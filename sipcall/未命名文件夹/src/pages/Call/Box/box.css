@@ -1,0 +1,26 @@
+.box-wrap {
+  width: 400px;
+  padding: 5px 10px;
+  position: relative;
+  margin-bottom: 20px;
+}
+.box-wrap .title {
+  color: #b5dcfb;
+  font-size: 17px;
+  line-height: 30px;
+}
+.box-wrap .title i {
+  color: #7ed9ec;
+}
+.box-outline {
+  position: relative;
+}
+.box-outline {
+  position: absolute;
+  height: 46px;
+  width: 128px;
+  top: -21px;
+  left: -1px;
+  background: url(../assets/sipcall4.png) -1px 2px no-repeat;
+}
+/*# sourceMappingURL=./Box.css.map */

@@ -6,6 +6,7 @@
 .settings-btn {
   border-color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
+  color: #fff !important;
 }
 .modal :global .ant-modal-content,
 .modal :global .ant-modal-header {

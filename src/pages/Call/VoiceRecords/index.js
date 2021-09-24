@@ -50,12 +50,18 @@ class VoiceRecords extends Component {
 
 	onClose () {
 		this.props.onVoiceClose(this)
+    voiceAudio = document.getElementById('voiceAudio')
+    voiceAudio.pause()
     this.setState({
       list: [],
       total: 0,
       destination_number: '',
       caller_id_number: '',
-      start_stamp: ''
+      start_stamp: '',
+      currentUrl: '',
+      currentId: '',
+      currentIndex: 0,
+      playing: false,
     })
 	}
 

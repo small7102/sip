@@ -17,7 +17,11 @@ import Storage from '../utils/localStore';
   state = {
     list:[]
   }
-  removeTempItem (item, index) {
+  removeTempItem (e, index) {
+    console.log(e)
+    e.stopPropagation();
+    // e.nativeEvent.stopImmediatePropagation();
+
     const {list} = this.state
     const {usernumber} = this.props
     let _list = [...list]
@@ -65,7 +69,7 @@ import Storage from '../utils/localStore';
               type="close"
               onClick={
                 (e)=> {
-                  this.removeTempItem(item, index)
+                  this.removeTempItem(e, index)
                 }
               }/>
         </div>
