@@ -4,7 +4,7 @@ import styles from './Users.less'
 import baseStyles from '../assets/base.less'
 import Box from '../Box/Box'
 import VoiceRecords from '../VoiceRecords';
-import { Input, Checkbox, Avatar, Icon, Popover, Spin } from 'antd';
+import { Input, Checkbox, Avatar, Icon, Popover, Spin, Button } from 'antd';
 import '../../Exception/style.less';
 const ITEM_HEIGHT = 50
 export default
@@ -177,7 +177,7 @@ class Users extends Component {
       this.props.onRef(this)
 
       window.addEventListener('click', (event)=> {
-        event.stopImmediatePropagation()
+        // event.stopImmediatePropagation()
         this.setState({dropItem: null})
       })
   }
@@ -186,6 +186,10 @@ class Users extends Component {
     const {dropItem} = this.state
     this.props.callByOne(dropItem)
   }
+
+	handleFresh = () => {
+		this.props.handleFresh()
+	}
 
 	arrowDom () {
     const {usernumber} = this.props
@@ -274,14 +278,26 @@ class Users extends Component {
 
 		return(
 			<Box
-				title="通讯录"
+				title={
+					<div className={`${baseStyles.flex}  ${baseStyles['align-center']}`}>
+						<span className={`${baseStyles['flex-item']}`}>通讯录</span>
+						<Button 
+							type="link" 
+							size="small" 
+							style={{marginLeft: 'auto',marginTop: '2px'}}
+							onClick={this.handleFresh}
+						>
+							刷新
+						</Button>
+					</div>
+				}
 				height={(height)}
 				width={width}
 				content={
 					<div className="m-users-wrap">
 						{dropItem && this.arrowDom()}
 						{this.searchDom()}
-						{loading &&
+						{loading ?
 							(
 								<div
 									className={`${baseStyles['w100']} ${baseStyles.flex} ${baseStyles['align-center']}  ${baseStyles['justify-center']}`}
@@ -290,8 +306,7 @@ class Users extends Component {
 									<Spin />
 								</div>
 							)
-						}
-						<Checkbox.Group
+						: (<Checkbox.Group
 							className={`${baseStyles['w100']}  ${styles['m-inp']}`}
 							value={selectedUserIds}
 							onChange={this.onSelectedUsersChange}
@@ -303,7 +318,8 @@ class Users extends Component {
 							>
 								{this.listDom()}
 							</ul>
-						</Checkbox.Group>
+						</Checkbox.Group>)
+						}
 						<VoiceRecords
 							visible={visible}
 							usernumber={usernumber}

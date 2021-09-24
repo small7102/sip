@@ -185,6 +185,7 @@ export default class extends Component {
 				let bConnected = (type == 'connected');
 				if (session == oSipSessionRegister) { // 注册登录成功
 					this.setState({sipAvalible: true})
+					this.mMessage('success', 'socket已连接')
 				} else if (session == oSipSessionCall) {
 					if (description === 'In call') {
 						this.setState({callConnected: true})
@@ -231,13 +232,14 @@ export default class extends Component {
 						let infoArr = info.split('\r\n')
 						let cbInfo = arrToObjectBySmyble(infoArr)
 						let {action, status, state, result, count, number} = cbInfo
-            let users = selectedUsers ? selectedUsers : [...this.state.calledUsers ]
+            let users = selectedUsers.length ? selectedUsers : this.props.users
             console.log(cbInfo, 12345)
             if (state) {
               infoUser = users.find(item => item.usr_number === cbInfo.number)
               if (!selectedUsers) {
-                users.push(infoUser)
-                this.setState({calledUsers: users})
+								let _calledUsers = [...calledUsers]
+                _calledUsers.push(infoUser)
+                this.setState({calledUsers: _calledUsers})
               } 
             }
 						if (state == 'add') {
@@ -314,6 +316,7 @@ export default class extends Component {
 					// 清除计时器
 					clearInterval(timer)
           timer = null
+					this.clearWaitingTimer()
 				}
 				break;
 			}
@@ -328,15 +331,15 @@ export default class extends Component {
 		}
   }
 
-  waitingTimeCount (text) {
+  waitingTimeCount () {
     let waiting = 0
     waitingTimer = setInterval(() => {
 			console.log(waiting,this.state.waitingDuration,4444)
       waiting++
       if (waiting>=this.state.waitingDuration) {
-        this.hangUp()
-        this.mMessage('warning', text)
 				this.clearWaitingTimer()
+        this.hangUp()
+        this.mMessage('warning', '守候超时')
       }
     },1000)
   }
@@ -349,17 +352,22 @@ export default class extends Component {
 	randomRoom () {
 		let roomId = '111'
 		for (let i = 0;i < 10; i++) {
-			roomId += Math.round(Math.random()*10)
+			roomId += Math.round(Math.random()*9)
 		}
-		return roomId
+
+		return roomId.substring(0,13)
 	}
 
 	// 开始拨号
 	sipCall () {
-    const {netNormal, calledUsers, oConfigCall, callConnected} = this.state
+    const {netNormal, calledUsers, oConfigCall, callConnected, sipAvalible} = this.state
     const {selectedUsers, account} = this.props
 		if(!netNormal){
       this.mMessage('error', 'scoket连接失败')
+      return
+    }
+		if(!sipAvalible){
+      this.mMessage('error', 'scoket连接中...')
       return
     }
 
@@ -387,7 +395,6 @@ export default class extends Component {
 		if (oSipStack && !oSipSessionCall) {
       this.saveRecords()
 			oSipSessionCall = oSipStack.newSession('call-audio', oConfigCall)
-
 			this.setState({sessionId: oSipSessionCall.o_session.i_id, calling: true})
 
 			let roomId = this.randomRoom()
@@ -418,6 +425,7 @@ export default class extends Component {
 
   hangUp () {
 		if (oSipSessionCall) {
+			console.log('挂断啊')
 			oSipSessionCall.hangup({
 				events_listener: {
 					events: '*',
@@ -531,7 +539,7 @@ export default class extends Component {
 		})
 
     message.config({
-      top: (height+140)/2 - 20,
+      top: (height+140)/2 - 80,
       duration: 3,
     });
 		this.getLocalSettings()

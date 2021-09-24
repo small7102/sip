@@ -52,7 +52,9 @@ class SipCall extends Component {
     const rawHeadAppendChild = HTMLHeadElement.prototype.appendChild
 
     HTMLHeadElement.prototype.appendChild = function (child) {
+			console.log('资源加载le', child.src)
 			if(child && child.src && child.src.indexOf('tmedia_session_ghost')> -1) {
+				console.log('资源加载le')
 				child.addEventListener('load', () => {
 					setTimeout(()=> {
 						loadedAsset = true
@@ -90,8 +92,6 @@ class SipCall extends Component {
     const _selectedUsers = usr_number ? selectedUsers.filter(user => {
 			return user.usr_number != usr_number
 		}) : []
-
-    console.log(_selectedUsers, 1234)
 
     this.setState({selectedUsers: _selectedUsers})
     userRef && userRef.removeUserById(usr_number)
@@ -164,15 +164,16 @@ class SipCall extends Component {
 		})
 	}
 
-	componentDidMount () {
+	handleFresh = () => {
+
 		const { dispatch } = this.props;
-    const {usernumber, realm, pwd, data_url} = this.state
+		const {usernumber, realm, pwd, data_url} = this.state
 		dispatch({
 			type: 'sipUsers/queryUsers',
 			payload: {
 				usernumber: `${usernumber}@${realm}`,
 				pwd,
-        data_url
+				data_url
 			}
 		});
 		dispatch({
@@ -180,9 +181,15 @@ class SipCall extends Component {
 			payload: {
 				usernumber: `${usernumber}@${realm}`,
 				pwd,
-        data_url
+				data_url
 			}
 		});
+	}
+
+	componentDidMount () {
+		const { dispatch } = this.props;
+    const {usernumber, realm, pwd, data_url} = this.state
+		this.handleFresh()
 		setInterval(() => {
 			dispatch({
 				type: 'sipUsers/getOnlineUsers',
@@ -193,6 +200,7 @@ class SipCall extends Component {
 				}
 			})
 		}, QUERY_ONLINE_DURATION)
+		
 
 		this.setState({
 			height: document.body.clientHeight,
@@ -237,6 +245,7 @@ class SipCall extends Component {
 							 pwd={pwd}
                dataUrl={data_url}
                callByOne={this.callByOne}
+               handleFresh={this.handleFresh}
 				/>
 				<Call height={height-112}
 							selectedUsers={selectedUsers}
