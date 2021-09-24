@@ -18,7 +18,7 @@ const Box = (props) => {
 			style={{height: `${height}px`, width: `${width}px`}}
 		>
         <span className={`${styles['box-outline']}`}></span>
-				<h3 className={styles.title}>
+				<h3 className={`${styles.title} ${baseStyles.flex}`}>
 					<i className={`${iconfont['m-icon']} ${iconfont[icon]}`}></i>
 					{title}
 				</h3>

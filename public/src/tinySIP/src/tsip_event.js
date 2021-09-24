@@ -116,7 +116,6 @@ tsip_event.prototype.signal = function () {
         setTimeout(function () { This.o_session.on_event(This) }, 1);
     }
 
-    console.log(this.e_type, 78787878888888)
     switch (this.e_type) {
         case tsip_event_type_e.DIALOG:
             {
