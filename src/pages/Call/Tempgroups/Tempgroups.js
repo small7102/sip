@@ -62,7 +62,11 @@ import Storage from '../utils/localStore';
             this.handleCreate(item)
           }}
         >
-            <div className={[baseStyles['flex-item']]}>
+            <div 
+              className={`${baseStyles['flex-item']} ${baseStyles['text-overflow']}`}
+              title={item.name}
+              style={{paddingLeft: '5px'}}
+            >
               {item.name}
             </div>
             <Icon
