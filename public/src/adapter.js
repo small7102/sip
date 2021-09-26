@@ -468,6 +468,7 @@ if (navigator.mozGetUserMedia) {
     // http://www.w3.org/TR/webrtc/#interface-definition
     // http://www.w3.org/TR/webrtc/#rtcpeerconnection-interface-extensions-2
     RTCPeerConnection = function (configuration, constraints) {
+        console.log(getPlugin(), 4545454545454545454545555555)
         return getPlugin().createPeerConnection(configuration, constraints);
     }
 

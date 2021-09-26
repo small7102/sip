@@ -6,10 +6,9 @@ import Call from '../Session/Call'
 import History from '../History/History'
 import Tempgroups from '../Tempgroups/tempgroups';
 import { connect } from 'dva';
-const QUERY_ONLINE_DURATION = 120000
+const QUERY_ONLINE_DURATION = 12000
 let loadedAsset = false
 let loadTimer = null
-let a = 0
 
 export default
 @connect(({ sipUsers, loading }) => {
@@ -27,9 +26,11 @@ class SipCall extends Component {
     this.tempCallByRecords = this.tempCallByRecords.bind(this)
     this.saveRecords = this.saveRecords.bind(this)
 	}
+
   componentWillMount(){
     this.loadSipAssets()
   }
+
 	state = {
 		height: 1080,
 		width: 1920,
@@ -54,6 +55,13 @@ class SipCall extends Component {
 
     HTMLHeadElement.prototype.appendChild = function (child) {
 			console.log('资源加载le', child.src)
+			if (child && child.src && child.src.indexOf('tsip_header_WWW_Authenticate')> -1) {
+				console.log('tsip_header_WWW_Authenticate:加载了')
+			}
+			if (child && child.src && child.src.indexOf('tsip_parser_header.js')> -1) {
+				console.log('tsip_parser_header.js:加载了')
+				// console.log(tsip_header_WWW_Authenticate)
+			}
 			if(child && child.src && child.src.indexOf('tmedia_session_ghost')> -1) {
 				console.log('资源加载le')
 				child.addEventListener('load', () => {
@@ -218,7 +226,7 @@ class SipCall extends Component {
     loadTimer = setInterval(() => {
       if (loadedAsset && this.state.callRef) {
         this.state.callRef.newSip()
-        clearInterval()
+        clearInterval(loadTimer)
         loadTimer=null
       }
     }, 1000)

@@ -47,7 +47,7 @@ export default class History extends Component {
             <div className={`${styles['name']} ${baseStyles['text-overflow']}`}>{item.name}</div>
             <div className={styles['sub-info']}>{dateFmt('yyyy-MM-dd hh:mm:ss',new Date(item.time))}  {item.type ? '呼入': '呼出'}</div>
           </div>
-          <Icon type="right" />
+          <Icon type="right" className={baseStyles.ft14}/>
         </div>)
     })
   }
@@ -56,7 +56,7 @@ export default class History extends Component {
     const {height} = this.props
     return (
       <div
-        className={`${baseStyles.flex} ${baseStyles.ft13} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
+        className={`${baseStyles.flex} ${baseStyles.ft14} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
         style={{lineHeight: `${height-60}px`, color: 'rgba(255,255,255,.5)'}}
       >
         暂无数据

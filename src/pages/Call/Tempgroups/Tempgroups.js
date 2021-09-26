@@ -96,7 +96,7 @@ import Storage from '../utils/localStore';
               this.state.list.length ? this.GroupsList() :
               (
                 <div
-                  className={`${baseStyles.flex} ${baseStyles.ft13} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
+                  className={`${baseStyles.flex} ${baseStyles.ft14} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
                   style={{lineHeight: '150px', color: 'rgba(255,255,255,.5)'}}
                 >
                   暂无数据

@@ -376,7 +376,7 @@ class VoiceRecords extends Component {
             <div className={`${baseStyles.flex} ${baseStyles['justify-center']} ${baseStyles['align-center']}`}>
               <Spin/>
             </div>
-          ): list.length ? this.renderList() : <div style={{lineHeight: '150px', textAlign:'center', color: 'rgba(255, 255, 255, .6'}}>暂无数据</div>}
+          ): list.length ? this.renderList() : <div className={baseStyles.ft14} style={{lineHeight: '150px', textAlign:'center', color: 'rgba(255, 255, 255, .6'}}>暂无数据</div>}
           <audio
             src={currentUrl}
             autoPlay

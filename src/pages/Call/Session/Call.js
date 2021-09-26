@@ -310,7 +310,8 @@ export default class extends Component {
 						calledUsers: [],
 						duration: 0,
 						talkingUser: null,
-            halfCall: true
+            halfCall: true,
+						ptting: false
 					})
 					oSipSessionCall = null;
 					// 清除计时器
@@ -333,20 +334,26 @@ export default class extends Component {
 
   waitingTimeCount () {
     let waiting = 0
-    waitingTimer = setInterval(() => {
-			console.log(waiting,this.state.waitingDuration,4444)
-      waiting++
-      if (waiting>=this.state.waitingDuration) {
-				this.clearWaitingTimer()
-        this.hangUp()
-        this.mMessage('warning', '守候超时')
-      }
-    },1000)
+		if (!waitingTimer) {
+			waitingTimer = setInterval(() => {
+				console.log(waiting,this.state.waitingDuration,4444)
+				waiting++
+				if (waiting>=this.state.waitingDuration) {
+					waiting = 0
+					this.clearWaitingTimer()
+					this.hangUp()
+					this.mMessage('warning', '守候超时')
+				}
+			},1000)
+		} else {
+			this.clearWaitingTimer()
+		}
   }
 
   clearWaitingTimer () {
     clearInterval(waitingTimer)
 		waitingTimer = null
+		console.log('清空计时器')
   }
 
 	randomRoom () {
@@ -676,6 +683,7 @@ export default class extends Component {
 		const {selectedUsers=[]} = this.props
     const {sessionId, talkingUser, calledUsers, connectedMemberObj, userCardSty, halfCall, callConnected} = this.state
     const users = calledUsers.length ? calledUsers : selectedUsers || []
+    // const users = selectedUsers
 		let sty = this.getUserCardStyleByNum(users.length)
 
 		return (
@@ -694,9 +702,11 @@ export default class extends Component {
                         [<span className={`${styles['state-icon']} ${styles[connectedMemberObj && connectedMemberObj[user.usr_number] || (!halfCall && callConnected) ? 'light': 'dark']}`}></span>,
                         <div className={`${baseStyles.ft12} ${styles['user-state']} ${baseStyles['flex-item']}`}>
                           {connectedMemberObj && connectedMemberObj[user.usr_number] || (!halfCall && callConnected) ? '已接入' : '连接中'}
-                        </div>] : <Icon type="close"
-                              className={`${baseStyles['pointer']}`}
-                              onClick={this.removeSelectedUser.bind(this, user.usr_number)}
+                        </div>] : 
+												<Icon 
+													type="close"
+													className={`${baseStyles['pointer']} ${baseStyles.ft16}`}
+													onClick={this.removeSelectedUser.bind(this, user.usr_number)}
                         />
                       }
 											{
@@ -825,7 +835,7 @@ export default class extends Component {
 							{duration ? this.formatDuration() : ''}
 						</div>
 						<div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-center']} ${styles['center-info']}`}>
-							{talkingUser ? `${talkingUser.usr_name}正在说话...` : !halfCall ? callConnected ? '通话已连接' : calledUsers[0].usr_name+'正在邀请你通话...' : ''}
+							{talkingUser ? `${talkingUser.usr_name}正在说话...` : callConnected ? '通话已连接' : calledUsers.length && !selectedUsers.length ? calledUsers[0].usr_name+'正在邀请你通话...' : ''}
 						</div>
 					</div>
 					{ selectedUsers.length || calledUsers.length ? this.createHandlers() : this.tipsDom()}

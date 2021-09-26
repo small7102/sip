@@ -1691,7 +1691,6 @@ SIPml.Session.Call.prototype.call = function (s_to, o_conf) {
 
     this.o_session.set(tsip_session.prototype.SetToStr(s_to));
     // set conf
-    console.log(o_conf, 789789789789)
     if (o_conf && o_conf.members) {
         o_conf.sip_headers = o_conf.sip_headers || []
         o_conf.sip_headers.push({
