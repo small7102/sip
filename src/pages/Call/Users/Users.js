@@ -58,6 +58,7 @@ class Users extends Component {
 			return (<li className={`${baseStyles['m-item']} ${styles['user-item']} ${onlineIds.includes(item.usr_number) ? styles['online'] : styles['offline']}`}
 									key={item.usr_uuid}
 									style={{width: `${this.width-20}px`}}
+                  title=''
 							>
 						<div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
 								<Checkbox
@@ -76,7 +77,10 @@ class Users extends Component {
                   </Avatar>
 								</Checkbox>
 								<div className={`${styles['item-name']} ${baseStyles['text-overflow']} ${baseStyles['flex-item']}`}>
-											{item.usr_name} {item.usr_number === usernumber ? '(自己)' : ''}
+                  <div className={`${baseStyles['text-overflow']}`} title={item.usr_name}>
+                    {item.usr_name} {item.usr_number === usernumber ? '(自己)' : ''}
+                  </div>
+                  <div className={`${baseStyles.ft12}`} style={{color: 'rgba(255,255,255,.5)'}}>{item.usr_number}</div>
 								</div>
 							<div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
 								<span className={`${baseStyles.ft12} ${styles['state']}`}>{onlineIds.includes(item.usr_number) ? '在线' : '离线'}</span>
@@ -249,7 +253,7 @@ class Users extends Component {
 				content={
 					<div
               className={baseStyles['scroll-bar']}
-							style={{ width: `${width-40}px`, maxHeight: '500px'}}>
+							style={{ width: `${width-40}px`, maxHeight: '400px'}}>
               <div className={styles['result-title']}>搜索结果：</div>
               {	this.seachResultDom() }
 					</div>

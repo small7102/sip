@@ -842,6 +842,7 @@ export default class extends Component {
             size="large"
             value={inpVal}
             placeholder="输入名称"
+            maxLength={80}
             onChange={
               (e) => {
                 this.changeInpVal(e)

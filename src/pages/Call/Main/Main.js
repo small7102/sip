@@ -38,6 +38,7 @@ class SipCall extends Component {
     realm: 'kinet',
 		socket_url: 'wss://183.47.46.242:7443/',
     data_url: 'http://183.47.46.242:8008',
+    // data_url: 'https://183.47.46.242:5443',
 		selectedUserIds: [],
 		selectedUsers: [],
     userRef: null,

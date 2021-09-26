@@ -33,7 +33,7 @@ class VoiceRecords extends Component {
     currentId: '',
     currentIndex: 0,
     playing: false,
-    end_stamp: moment().format('YYYY-MM-DD hh:mm:ss'),
+    end_stamp: new Date(),
     caller_id_number: '',
     start_stamp: '',
     loading: false,
@@ -44,7 +44,7 @@ class VoiceRecords extends Component {
     this.setState({
       destination_number: usr_number,
       caller_id_number: usr_number,
-      end_stamp: moment().format('YYYY-MM-DD hh:mm:ss')
+      end_stamp: new Date()
     })
   }
 
@@ -62,6 +62,7 @@ class VoiceRecords extends Component {
       currentId: '',
       currentIndex: 0,
       playing: false,
+      end_stamp: new Date(),
     })
 	}
 
@@ -92,14 +93,16 @@ class VoiceRecords extends Component {
 	handleSearch () {
     const {usernumber, pwd, realm, dataUrl} = this.props
     const {end_stamp, start_stamp, destination_number, offset} = this.state
+
+    console.log(end_stamp, moment(end_stamp, 'YYYY-MM-DD HH:mm:ss'))
 		this.setState({loading: true})
     getCallRecords({
       usernumber: `${usernumber}@${realm}`,
       pwd,
       data_url: dataUrl,
       moreParams: {
-        end_stamp,
-        start_stamp,
+        end_stamp: end_stamp ? moment(end_stamp).format('YYYY-MM-DD hh:mm:ss') : null,
+        start_stamp: start_stamp ? moment(start_stamp).format('YYYY-MM-DD hh:mm:ss') : null,
         limit: 50,
         caller_id_number: destination_number,
         destination_number,
@@ -192,12 +195,12 @@ class VoiceRecords extends Component {
 
   onEndDateChange (e) {
     this.setState({
-      start_stamp: e.format('YYYY-MM-DD HH:mm:ss')
+      end_stamp: e ? moment(e, 'YYYY-MM-DD HH:mm:ss') : null
     })
   }
   onStartDateChange (e) {
     this.setState({
-      start_stamp: e.format('YYYY-MM-DD HH:mm:ss')
+      start_stamp: e ? moment(e, 'YYYY-MM-DD HH:mm:ss') : null
     })
   }
 
@@ -226,7 +229,7 @@ class VoiceRecords extends Component {
       destination_number:'',
       caller_id_number: '',
       start_stamp: '',
-      end_stamp: ''
+      end_stamp: new Date(),
     })
   }
 
@@ -295,7 +298,7 @@ class VoiceRecords extends Component {
 							className={styles['voice-wrap']}
 							dropdownClassName={styles['select-wrap']}
               value={caller_id_number}
-              allowClear={true}
+              allowClear
               showSearch
 							style={{ width: 100 }}
               onChange={this.onCallerChange}
@@ -305,6 +308,8 @@ class VoiceRecords extends Component {
 					</Form.Item>
 					<Form.Item label="开始时间" wrapperCol={{ span: 16, offset: 1 }}>
 					<DatePicker
+            showTime
+            allowClear
 						className={styles['date-wrap']}
             dropdownClassName={styles['drop-date-wrap']}
 						style={{ width: 220 }}
@@ -320,6 +325,8 @@ class VoiceRecords extends Component {
 					</Form.Item>
 					<Form.Item label="结束时间"  wrapperCol={{ span: 16, offset: 1 }}>
 					<DatePicker
+            showTime
+            allowClear
 						className={styles['date-wrap']}
             dropdownClassName={styles['drop-date-wrap']}
 						style={{ width: 220 }}
