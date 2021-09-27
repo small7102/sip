@@ -151,4 +151,35 @@
 .pagination-wrap :global .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-ellipsis {
   color: rgba(255, 255, 255, 0.8);
 }
+.pop :global .ant-popover-inner {
+  width: 220px;
+  background: #0c1740;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+}
+.pop :global .ant-popover-content > .ant-popover-arrow,
+.pop :global .ant-popover-placement-bottomLeft > .ant-popover-content > .ant-popover-arrow,
+.pop :global .ant-popover-placement-bottomRight > .ant-popover-content > .ant-popover-arrow {
+  border-right-color: #0c1740;
+  border-bottom-color: #0c1740;
+}
+.pop :global .ant-popover-inner-content {
+  word-break: break-word;
+  font-size: 12px !important;
+  max-height: 500px;
+  overflow-y: scroll !important;
+}
+.pop :global .ant-popover-inner-content::-webkit-scrollbar {
+  width: 6px;
+  height: 4px;
+}
+.pop :global .ant-popover-inner-content::-webkit-scrollbar-button {
+  display: none;
+}
+.pop :global .ant-popover-inner-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0);
+}
+.pop :global .ant-popover-inner-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
 /*# sourceMappingURL=./index.css.map */

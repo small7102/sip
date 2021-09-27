@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import styles from './index.less';
 import baseStyles from '../assets/base.less'
 import iconfont from '../assets/iconfont.less'
-import { Drawer, Form, Select, Empty,DatePicker, Button, Pagination, Icon, Spin } from 'antd';
+import { Drawer, Form, Select, Popover,DatePicker, Button, Pagination, Icon, Spin } from 'antd';
 const { Option } = Select;
 import moment from 'moment';
 import { connect } from 'dva';
@@ -94,7 +94,6 @@ class VoiceRecords extends Component {
     const {usernumber, pwd, realm, dataUrl} = this.props
     const {end_stamp, start_stamp, destination_number, offset} = this.state
 
-    console.log(end_stamp, moment(end_stamp, 'YYYY-MM-DD HH:mm:ss'))
 		this.setState({loading: true})
     getCallRecords({
       usernumber: `${usernumber}@${realm}`,
@@ -235,15 +234,38 @@ class VoiceRecords extends Component {
 
   renderList () {
     const {list, currentId, playing} = this.state
+    const {usersMap} = this.props
     return list.map((item, index) => {
+      let {mebers} = item
+      if (mebers) {
+        mebers = JSON.parse(mebers)
+        mebers = mebers.map(user => {
+         return user && usersMap[user] && usersMap[user].usr_name || ''
+        }).join(',')
+      }
       return (
         <div key={index}
               className={`${baseStyles['m-item']} ${styles['voice-item']} ${baseStyles['flex']} ${baseStyles['align-center']}`}>
           <div>
-            <div>{item.caller_id_name} <i className={`${iconfont['m-icon']} ${iconfont['icon-chufadaodaxiao']}`}></i> {item.destination_name}</div>
+            <Popover
+              content={mebers || item.destination_name}
+              trigger="click"
+              overlayClassName={styles.pop}
+              >
+            <div
+              className={baseStyles['text-overflow']}
+              style={{width: '300px'}}
+            >
+              {item.caller_id_name} <i className={`${iconfont['m-icon']} ${iconfont['icon-chufadaodaxiao']}`}></i>
+                <span className={baseStyles.ft12}>
+                  {mebers || item.destination_name}
+                </span>
+            </div>
+              </Popover>
             <div className={`${styles['sub-info']}`}>
                 {moment(new Date(parseInt(item.start_stamp+'000'))).format('YYYY-MM-DD hh:mm:ss')}
               <span style={{paddingLeft: 8}}>{item.duration && `时长:${sendsFormat(item.duration, 'text')}`}</span>
+              <span style={{paddingLeft: 8}}>{mebers ? '临时群组' : '单呼'}</span>
             </div>
           </div>
 
@@ -272,7 +294,7 @@ class VoiceRecords extends Component {
 				closable={true}
 				onClose={this.onClose}
 				visible={visible}
-				width={360}
+				width={400}
 			>
 				<Form
 					labelCol={{ span: 5 }} wrapperCol={{ span: 12 }}

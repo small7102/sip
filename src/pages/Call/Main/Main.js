@@ -129,6 +129,17 @@ class SipCall extends Component {
 		return users || []
 	}
 
+  getUsersMap () {
+    let map = {}
+    let users = this.props.sipUsers.users
+    if (users) {
+      users.forEach(item => {
+        map[item.usr_number] = item
+      })
+    }
+    return map
+  }
+
   saveTempgroup () {
     const {tempgroupRef} = this.state
     tempgroupRef && tempgroupRef.getLocalData()
@@ -209,7 +220,7 @@ class SipCall extends Component {
 				}
 			})
 		}, QUERY_ONLINE_DURATION)
-		
+
 
 		this.setState({
 			height: document.body.clientHeight,
@@ -245,6 +256,7 @@ class SipCall extends Component {
                height={height-112}
 							 width={width > 1500 ? 360 : 260}
 							 users={this.usersOfUpMyself()}
+               usersMap= {this.getUsersMap()}
 							 loading={loading}
 							 onlineIds={sipUsers.onlineUserIds}
 							 getSelectedUserIds={this.getSelectedUsers}

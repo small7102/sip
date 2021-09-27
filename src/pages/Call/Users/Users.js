@@ -28,7 +28,8 @@ class Users extends Component {
 		visible: false,
     currentItem: null,
     drawerRef: null,
-    arrowUp: true
+    arrowUp: true,
+    usersMap: {}
 	}
 
   getOnlineUpUsers () {
@@ -46,7 +47,6 @@ class Users extends Component {
 
 			_users = onlineUsers.concat(offlineUsers)
 		}
-
     return _users
   }
 
@@ -277,7 +277,7 @@ class Users extends Component {
   }
 
 	render () {
-		let {height, width = 360, loading, usernumber, pwd, realm, dataUrl} = this.props
+		let {height, width = 360, loading, usernumber, pwd, realm, dataUrl, usersMap} = this.props
     const {selectedUserIds, dropItem, visible} = this.state
 
 		return(
@@ -285,9 +285,9 @@ class Users extends Component {
 				title={
 					<div className={`${baseStyles.flex}  ${baseStyles['align-center']}`}>
 						<span className={`${baseStyles['flex-item']}`}>通讯录</span>
-						<Button 
-							type="link" 
-							size="small" 
+						<Button
+							type="link"
+							size="small"
 							style={{marginLeft: 'auto',marginTop: '2px'}}
 							onClick={this.handleFresh}
 						>
@@ -332,6 +332,7 @@ class Users extends Component {
               height={height}
               dataUrl={dataUrl}
 							users={this.getOnlineUpUsers()}
+              usersMap={usersMap}
 							onVoiceClose={this.onVoiceClose}
               onRef={this.onRef}
 						/>
