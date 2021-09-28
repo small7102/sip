@@ -1,7 +1,7 @@
 @font-face {
-  font-family: 'iconfont';
+  font-family: "iconfont";
   /* Project id 2768765 */
-  src: url('//at.alicdn.com/t/font_2768765_oqvl04afhy8.woff2?t=1631804776074') format('woff2'), url('//at.alicdn.com/t/font_2768765_oqvl04afhy8.woff?t=1631804776074') format('woff'), url('//at.alicdn.com/t/font_2768765_oqvl04afhy8.ttf?t=1631804776074') format('truetype');
+  src: url('iconfont.woff2'), url('iconfont.woff'), url('iconfont.ttf');
 }
 .m-icon {
   font-family: "iconfont" !important;

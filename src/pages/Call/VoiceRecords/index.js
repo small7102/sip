@@ -92,7 +92,7 @@ class VoiceRecords extends Component {
 
 	handleSearch () {
     const {usernumber, pwd, realm, dataUrl} = this.props
-    const {end_stamp, start_stamp, destination_number, offset} = this.state
+    const {end_stamp, start_stamp, destination_number, caller_id_number,offset} = this.state
 
 		this.setState({loading: true})
     getCallRecords({
@@ -103,7 +103,7 @@ class VoiceRecords extends Component {
         end_stamp: end_stamp ? moment(end_stamp).format('YYYY-MM-DD hh:mm:ss') : null,
         start_stamp: start_stamp ? moment(start_stamp).format('YYYY-MM-DD hh:mm:ss') : null,
         limit: 50,
-        caller_id_number: destination_number,
+        caller_id_number,
         destination_number,
         offset: offset-1
 		}}).then(res => {

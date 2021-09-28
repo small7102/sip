@@ -143,7 +143,7 @@ export default class extends Component {
 							usernumber = info[0]
 							this.setState({sessionId: e.newSession.o_session.i_id})
 						}
-            
+
             if (usernumber) {
               let user = this.props.users.find(item => item.usr_number == usernumber)
               if (user) {
@@ -240,7 +240,7 @@ export default class extends Component {
 								let _calledUsers = [...calledUsers]
                 _calledUsers.push(infoUser)
                 this.setState({calledUsers: _calledUsers})
-              } 
+              }
             }
 						if (state == 'add') {
 							let obj = connectedMemberObj ? {...connectedMemberObj} : {}
@@ -469,7 +469,7 @@ export default class extends Component {
 
   saveRecords () {
     const {usernumber, myself} = this.props.account
-		const {selectedUsers} = this.props	
+		const {selectedUsers} = this.props
 		const {calledUsers} = this.state
 
     let records = Storage.localGet(`${usernumber}records`) || [],name,
@@ -478,9 +478,9 @@ export default class extends Component {
       name = selectedUsers.map(item => item.usr_name)
       name = name.length ? name.join(',') : ''
     } else {
-      name = calledUsers[0].usr_number 
+      name = calledUsers[0].usr_number
     }
- 
+
     records.unshift(JSON.stringify({
       name,
       time: new Date().getTime(),
@@ -558,12 +558,12 @@ export default class extends Component {
     });
 		this.getLocalSettings()
 	}
-  
+
   getLocalSettings () {
     const {account} = this.props
 
     let settings = Storage.localGet(`${account.usernumber}settings`)
-  
+
     if (settings) {
       settings = JSON.parse(settings)
       this.setState({
@@ -702,8 +702,8 @@ export default class extends Component {
                         [<span className={`${styles['state-icon']} ${styles[connectedMemberObj && connectedMemberObj[user.usr_number] || (!halfCall && callConnected) ? 'light': 'dark']}`}></span>,
                         <div className={`${baseStyles.ft12} ${styles['user-state']} ${baseStyles['flex-item']}`}>
                           {connectedMemberObj && connectedMemberObj[user.usr_number] || (!halfCall && callConnected) ? '已接入' : '连接中'}
-                        </div>] : 
-												<Icon 
+                        </div>] :
+												<Icon
 													type="close"
 													className={`${baseStyles['pointer']} ${baseStyles.ft16}`}
 													onClick={this.removeSelectedUser.bind(this, user.usr_number)}
@@ -743,8 +743,8 @@ export default class extends Component {
   tipsDom () {
     return (
       <div
-				className={`${baseStyles.flex} ${baseStyles.h100} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
-				style={{marginBottom: -141, color: 'rgba(255,255,255,.5)'}}
+				className={`${baseStyles.flex} ${baseStyles.ft12} ${baseStyles.h100} ${baseStyles['align-center']} ${baseStyles['justify-center']}`}
+				style={{marginBottom: -141, fontSize: '12px !important',color: 'rgba(255,255,255,.5)'}}
 			>
         <i className={`${iconfont['m-icon']} ${iconfont['icon-tixing']}`}
            style={{color: '#F4B754'}}
@@ -768,7 +768,7 @@ export default class extends Component {
        <span className={styles['btn-text']}>{callConnected ? '挂断' : '取消'}</span>
      </div>
      {
-       callConnected ? halfCall && 
+       callConnected ? halfCall &&
         (
           <div className={`${styles['handler-item']} ${baseStyles['pr']}`}
 								onClick={ptting ? this.stopPtt : this.sipCall}>
@@ -780,7 +780,7 @@ export default class extends Component {
               this.talkingDom('ptt-ani') : ''
             }
           </div>
-        ) : 
+        ) :
         (
           <div className={`${styles['handler-item']}`}>
             <div id="create"
