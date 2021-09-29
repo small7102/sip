@@ -54,7 +54,6 @@ class SipCall extends Component {
     const rawHeadAppendChild = HTMLHeadElement.prototype.appendChild
 
     HTMLHeadElement.prototype.appendChild = function (child) {
-			console.log('资源加载le', child.src)
 			if (child && child.src && child.src.indexOf('tsip_header_WWW_Authenticate')> -1) {
 				console.log('tsip_header_WWW_Authenticate:加载了')
 			}
@@ -250,13 +249,14 @@ class SipCall extends Component {
 		return(
 			<div
 				className={`${styles.sipcall} ${baseStyles['flex']}`}
-				style={{height: `${height-112}px`}}
+				style={{height: `${height-68}px`, padding: '24px', overflow: 'hidden'}}
 			>
 				<Users ref="users"
                height={height-112}
-							 width={width > 1500 ? 360 : 260}
+							 width={width > 1500 ? 400 : 300}
 							 users={this.usersOfUpMyself()}
                usersMap= {this.getUsersMap()}
+							 departments={sipUsers.departments}
 							 loading={loading}
 							 onlineIds={sipUsers.onlineUserIds}
 							 getSelectedUserIds={this.getSelectedUsers}
@@ -283,14 +283,14 @@ class SipCall extends Component {
 				>
 					<History
             height={height - 332}
-            width={width > 1500 ? 360 : 260}
+            width={width > 1500 ? 400 : 300}
             onRecordsRef={this.onRecordsRef}
             usernumber={usernumber}
             tempCallByRecords={this.tempCallByRecords}
           />
 					<Tempgroups
             height={200}
-            width={width > 1500 ? 360 : 260}
+            width={width > 1500 ? 400 : 300}
             onTempGroupRef={this.onTempGroupRef}
             usernumber={usernumber}
 						tempCallByRecords={this.tempCallByRecords}

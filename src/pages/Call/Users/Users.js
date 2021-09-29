@@ -4,9 +4,11 @@ import styles from './Users.less'
 import baseStyles from '../assets/base.less'
 import Box from '../Box/Box'
 import VoiceRecords from '../VoiceRecords';
-import { Input, Checkbox, Avatar, Icon, Popover, Spin, Button } from 'antd';
+import { Input, Checkbox, Avatar, Icon, Popover, Spin, Button, Tree } from 'antd';
 import '../../Exception/style.less';
+import { useHistory } from 'react-router';
 const ITEM_HEIGHT = 50
+const { TreeNode } = Tree;
 export default
 class Users extends Component {
 	constructor (props) {
@@ -29,7 +31,8 @@ class Users extends Component {
     currentItem: null,
     drawerRef: null,
     arrowUp: true,
-    usersMap: {}
+    usersMap: {},
+		expandedKeys: []
 	}
 
   getOnlineUpUsers () {
@@ -50,56 +53,28 @@ class Users extends Component {
     return _users
   }
 
-	listDom () {
-    const {usernumber, onlineIds=[]} = this.props
-		const _users = this.getOnlineUpUsers()
+	getOnlines (list) {
+		const {usernumber, users, onlineIds=[]} = this.props
+		onlineIds.unshift(usernumber)
+		let _users = []
 
-		return _users.map(item => {
-			return (<li className={`${baseStyles['m-item']} ${styles['user-item']} ${onlineIds.includes(item.usr_number) ? styles['online'] : styles['offline']}`}
-									key={item.usr_uuid}
-									style={{width: `${this.width-20}px`}}
-                  title=''
-							>
-						<div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
-								<Checkbox
-									value={item.usr_number}
-									disabled={item.usr_number === usernumber}
-									>
-									<Avatar
-										style={{marginTop: '-2px', marginRight: '8px', backgroundColor:  `${item.usr_type === 'dispatch' ? '#4e86c7' : '#87d068'}`}}
-										shape="square"
-										size={32}
-									>
-                    <i
-                      className={`${iconfont['m-icon']} ${iconfont[item.usr_type === 'dispatch' ? 'icon-diannao' : 'icon-chengyuan']}`}
-                      style={{fontSize: `${item.usr_type === 'dispatch' ? 18 : 22}px`}}
-                    ></i>
-                  </Avatar>
-								</Checkbox>
-								<div className={`${styles['item-name']} ${baseStyles['text-overflow']} ${baseStyles['flex-item']}`}>
-                  <div className={`${baseStyles['text-overflow']}`} title={item.usr_name}>
-                    {item.usr_name} {item.usr_number === usernumber ? '(自己)' : ''}
-                  </div>
-                  <div className={`${baseStyles.ft12}`} style={{color: 'rgba(255,255,255,.5)'}}>{item.usr_number}</div>
-								</div>
-							<div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
-								<span className={`${baseStyles.ft12} ${styles['state']}`}>{onlineIds.includes(item.usr_number) ? '在线' : '离线'}</span>
-								<i
-                  className={`${iconfont['icon-gengduo']} ${iconfont['m-icon']} ${styles['more-btn']}`}
-                  onClick={(e)=> {
-                    e.persist()
-                    e.stopPropagation()
-                    this.handleMore(e, item)
-                  }}
-                >
-                  </i>
-							</div>
-						</div>
-				</li>)
-		})
+		if (list.length) {
+			const onlineUsers = [], departments=[]
+			const offlineUsers = list.filter(item => {
+				let isOnline = onlineIds.includes(item.usr_number)
+				if (!item.usr_number) departments.push(item)
+				if (isOnline) item.usr_number === usernumber ? onlineUsers.unshift(item) : onlineUsers.push(item)
+				return !isOnline && item.usr_number
+			})
+
+			_users = departments.concat(onlineUsers.concat(offlineUsers))
+			return _users
+		}
+		return []
 	}
 
 	onSelectedUsersChange (data) {
+		data = data.filter(item => !item.includes('-'))
 		this.props.getSelectedUserIds(data)
     this.setState({selectedUserIds: data})
 	}
@@ -276,6 +251,107 @@ class Users extends Component {
     this.setState({drawerRef: ref})
   }
 
+
+	renderTreeNodes = (data, level = 1) => {
+		const {usernumber, onlineIds=[]} = this.props
+		data = this.getOnlines(data)
+
+		return data.map((item, index) => {
+      if (item.children) {
+        return (
+          <TreeNode 
+						title={
+							<div>
+									<i
+										className={`${iconfont['m-icon']} ${iconfont['icon-bumen']}`}
+										style={{fontSize: `16px`}}
+									></i>
+								<span>{item.dep_name}</span>
+							</div>
+						} 
+						key={item.dep_uuid} 
+						dataRef={item}
+						className={styles['tree-parent']}
+						checkable={!!item.children.length}
+						disableCheckbox={!item.children.length}
+					>
+            {this.renderTreeNodes(item.children||[], item.dep_level.length/3)}
+          </TreeNode>
+        );
+      }
+      return <TreeNode 
+								key={item.usr_number} 
+								className={styles['tree-child']}
+								disableCheckbox={item.usr_number === usernumber}
+								title ={
+									<div 
+										className={`${onlineIds.includes(item.usr_number) ? styles['online'] : styles['offline']} ${baseStyles['flex']} ${baseStyles['align-center']}`}
+									>
+											<Avatar
+												style={{marginTop: '-2px', marginRight: '8px', backgroundColor:  `${item.usr_type === 'dispatch' ? '#4e86c7' : '#87d068'}`}}
+												shape="square"
+												size={32}
+											>
+												<i
+													className={`${iconfont['m-icon']} ${iconfont[item.usr_type === 'dispatch' ? 'icon-diannao' : 'icon-chengyuan']}`}
+													style={{fontSize: `${item.usr_type === 'dispatch' ? 18 : 22}px`}}
+												></i>
+											</Avatar>
+										<div 
+											className={`${styles['item-name']} ${baseStyles['text-overflow']} ${baseStyles['flex-item']}`}
+											style={{width: `${105-(level-1)*16}px`}}
+										>
+											<div className={`${baseStyles['text-overflow']}`} title={item.usr_name}>
+												{item.usr_name} {item.usr_number === usernumber ? '(自己)' : ''}
+											</div>
+											<div className={`${baseStyles.ft12}`} style={{color: 'rgba(255,255,255,.5)'}}>{item.usr_number}</div>
+										</div>
+									<div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
+										<span className={`${baseStyles.ft12} ${styles['state']}`}>
+											{onlineIds.includes(item.usr_number) ? '在线' : '离线'}
+										</span>
+										<i
+											className={`${iconfont['icon-gengduo']} ${iconfont['m-icon']} ${styles['more-btn']}`}
+											onClick={(e)=> {
+												e.persist()
+												e.stopPropagation()
+												this.handleMore(e, item)
+											}}
+										>
+											</i>
+									</div>
+								</div>
+								} 
+								{...item} 
+							/>;
+    })
+	}
+		
+
+	treeDom () {
+		const {departments=[]} = this.props
+		return (
+      <Tree
+				checkable
+				switcherIcon={<Icon type="down" />}
+				showIcon={true}
+				className={styles.tree}
+				onCheck={this.onSelectedUsersChange}
+				checkedKeys={this.state.selectedUserIds}
+				defaultExpandedKeys={departments[0] && [departments[0].dep_uuid] || []}
+      >
+				{this.renderTreeNodes(departments || [])}
+      </Tree>
+    );
+	}
+
+	componentWillUnmount () {
+		const {departments} = this.props
+		this.setState({
+			expandedKeys: departments[0] && [departments[0].dep_uuid] || []
+		})
+	}
+
 	render () {
 		let {height, width = 360, loading, usernumber, pwd, realm, dataUrl, usersMap} = this.props
     const {selectedUserIds, dropItem, visible} = this.state
@@ -320,7 +396,8 @@ class Users extends Component {
                 style={{height: `${height-100}px`}}
 								id="userRef"
 							>
-								{this.listDom()}
+								{/* {this.listDom()} */}
+								{this.treeDom()}
 							</ul>
 						</Checkbox.Group>)
 						}

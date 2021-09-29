@@ -31,6 +31,53 @@
 			border-top-color: #111e4d;
   		border-left-color: #111e4d;
 		}
+		
+	}
+}
+
+.tree {	
+	:global{
+		.ant-tree-switcher{
+			background: none !important;
+			color: rgba(255,255,255,.8) !important;
+		}
+		.ant-tree-checkbox-inner{
+			background-color: #172d68;
+		}
+		.ant-tree-checkbox-checked .ant-tree-checkbox-inner{
+			background-color: #1890FF;
+			border-color: #1890FF;
+		}
+		.ant-tree-title{
+			font-size: 14px;
+		}
+		.ant-tree-treenode-switcher-close {
+			// display: flex !important;
+		}
+		.ant-tree-node-content-wrapper{
+			&.ant-tree-node-selected{
+				background-color: rgba(255,255,255,.02) !important;
+			}
+			&:hover{
+				background-color: rgba(255,255,255,.03) !important;
+			}
+			line-height: 18px !important;
+			flex: 1;
+		}
+	}
+	.tree-parent{
+		:global{
+			.ant-tree-node-content-wrapper{
+				height: 30px !important;
+			}
+		}
+	}
+	.tree-child{
+		:global{
+			.ant-tree-node-content-wrapper{
+				height: 44px !important;
+			}
+		}
 	}
 }
 
@@ -39,21 +86,21 @@
 	font-size: 14px;
 	border-bottom: 1px solid rgba(174,213,246,.16);
   padding: 6px 0;
-	&.offline {
-		.item-name {
-			color: rgba(255,255,255,.6);
-		}
-		.state {
-			color: rgba(255,255,255,.5);
-		}
+}
+.offline {
+	.item-name {
+		color: rgba(255,255,255,.6);
 	}
-	&.online {
-		.item-name {
-			color: rgba(255,255,255);
-		}
-		.state {
-			color: #3e9ff3
-		}
+	.state {
+		color: rgba(255,255,255,.5) !important;
+	}
+}
+.online {
+	.item-name {
+		color: rgba(255,255,255);
+	}
+	.state {
+		color: #3e9ff3
 	}
 }
 
