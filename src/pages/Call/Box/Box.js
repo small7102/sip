@@ -13,7 +13,6 @@ const Box = (props) => {
 	} = props
 	return(
 		<div
-			title={title}
 			className={`${styles['box-wrap']} ${baseStyles['m-box-border']}`}
 			style={{height: `${height}px`, width: `${width}px`}}
 		>

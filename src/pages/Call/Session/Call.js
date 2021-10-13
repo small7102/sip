@@ -185,7 +185,8 @@ export default class extends Component {
 				let bConnected = (type == 'connected');
 				if (session == oSipSessionRegister) { // 注册登录成功
 					this.setState({sipAvalible: true})
-					this.mMessage('success', 'socket已连接')
+					// this.mMessage('success', 'socket已连接')
+          console.log('socket已连接',bConnected)
 				} else if (session == oSipSessionCall) {
 					if (description === 'In call') {
 						this.setState({callConnected: true})

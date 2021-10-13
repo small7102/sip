@@ -1,26 +1,20 @@
 import {queryUsers, getOnlineUsers, getCallRecords} from '../../services/index'
 
-
-// function getTree (list, result = [], i = 1) {
-//   let branch = []
-//   list = list.filter((item, index) => {
-//     let bool = item.dep_level.length / 3 === i
-//     if (bool) branch.push(item)
-//     return !bool
-//   })
-
-//   console.log(branch, list, result)
-//   if (!branch.length && !list.length) return result
-
-//   if (result.length) {
-//     branch.forEach(item => {
-//       getTree(list, result, i++)
-//     })
-//   } else {
-//     result = branch
-//     getTree(list, result, i++)
-//   }
-// }
+function getParentIdMap (list) {
+  let items = {}
+  // 获取每个节点的直属子节点，*记住是直属，不是所有子节点
+  for (let i = 0; i < list.length; i++) {
+    let deep = list[i].dep_level.length / 3, key
+    key  = deep === 1 ? '0' : list[i].dep_level.substr(0, (deep-1) * 3)
+    if (items[key]) {
+      items[key].push(list[i])
+    } else {
+      items[key] = []
+      items[key].push(list[i])
+    }
+  }
+  return items
+}
 
 function getTrees (list, parentId) {
   let items = {}
@@ -47,12 +41,26 @@ function formatTree (items, parentId = '0', deep = 0) {
     return result
   }
   for (let t of items[parentId]) {
-    let value = {...t}
+    let value = {...t,parentId}
     value.children = formatTree(items, value.dep_level) || []
     value.children = value.children.concat(value.users)
     result.push(value)
   }
   return result
+}
+
+
+function getMapByList (list, key='dep_uuid', pid=true) {
+  let map = {}
+  list.forEach(item => {
+    map[item[key]] = {...item}
+    if (pid) {
+      let deep = item.dep_level.length / 3, parentId
+      parentId  = deep === 1 ? '0' : item.dep_level.substr(0, (deep-1) * 3)
+      map[item[key]].parentId = parentId
+    }
+  })
+  return map
 }
 
 export default {
@@ -91,9 +99,6 @@ export default {
         const departmentsKeys = response.fields['department-fields']
         userKeys.push('level')
 
-        
-        
-        
         // key,value形式的数据
         const _users = users.map(item => {
           let user = {}
@@ -113,15 +118,31 @@ export default {
           })
           return department
         })
-        console.log(_departments, getTrees(_departments))
 
+        yield put({
+          type: 'saveOriginDepartments',
+          payload: _departments
+        })
+        let items = getParentIdMap(_departments)
         yield put({
           type: 'saveSipUsers',
           payload: _users
         })
         yield put({
+          type: 'saveParentIdMap',
+          payload: items
+        })
+        yield put({
           type: 'saveDepartments',
-          payload: getTrees(_departments)
+          payload: formatTree(items)
+        })
+        yield put({
+          type: 'saveDepartmentsMap',
+          payload: getMapByList(_departments)
+        })
+        yield put({
+          type: 'saveUsersMap',
+          payload: getMapByList(_users, 'usr_number', false)
         })
       }
     }
@@ -134,10 +155,34 @@ export default {
         users: payload
       }
     },
+    saveUsersMap (state, {payload}) {
+      return {
+        ...state,
+        usersMap: payload
+      }
+    },
     saveDepartments (state, {payload}) {
       return {
         ...state,
         departments: payload
+      }
+    },
+    saveDepartmentsMap (state, {payload}) {
+      return {
+        ...state,
+        departmentsMap: payload
+      }
+    },
+    saveOriginDepartments (state, {payload}) {
+      return {
+        ...state,
+        originDepartments: payload
+      }
+    },
+    saveParentIdMap (state, {payload}) {
+      return {
+        ...state,
+        parentIdMap: payload
       }
     },
     saveOnlineUsers (state, {payload}) {

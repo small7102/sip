@@ -47,20 +47,13 @@ class SipCall extends Component {
     tempgroupRef: null,
     recordsRef: null,
     loadedAsset: false,
-    hasPoCDevice: false
+    hasPoCDevice: false,
 	}
 
 	loadSipAssets() {
     const rawHeadAppendChild = HTMLHeadElement.prototype.appendChild
 
     HTMLHeadElement.prototype.appendChild = function (child) {
-			if (child && child.src && child.src.indexOf('tsip_header_WWW_Authenticate')> -1) {
-				console.log('tsip_header_WWW_Authenticate:加载了')
-			}
-			if (child && child.src && child.src.indexOf('tsip_parser_header.js')> -1) {
-				console.log('tsip_parser_header.js:加载了')
-				// console.log(tsip_header_WWW_Authenticate)
-			}
 			if(child && child.src && child.src.indexOf('tmedia_session_ghost')> -1) {
 				console.log('资源加载le')
 				child.addEventListener('load', () => {
@@ -128,17 +121,6 @@ class SipCall extends Component {
 		return users || []
 	}
 
-  getUsersMap () {
-    let map = {}
-    let users = this.props.sipUsers.users
-    if (users) {
-      users.forEach(item => {
-        map[item.usr_number] = item
-      })
-    }
-    return map
-  }
-
   saveTempgroup () {
     const {tempgroupRef} = this.state
     tempgroupRef && tempgroupRef.getLocalData()
@@ -186,7 +168,7 @@ class SipCall extends Component {
 	handleFresh = () => {
 
 		const { dispatch } = this.props;
-		const {usernumber, realm, pwd, data_url} = this.state
+		const {usernumber, realm, pwd, data_url, userRef} = this.state
 		dispatch({
 			type: 'sipUsers/queryUsers',
 			payload: {
@@ -194,7 +176,10 @@ class SipCall extends Component {
 				pwd,
 				data_url
 			}
-		});
+		}).then(res => {
+      console.log(userRef, this.state, this.state.userRef)
+      this.state.userRef && this.state.userRef.setDefaultKeys()
+    })
 		dispatch({
 			type: 'sipUsers/getOnlineUsers',
 			payload: {
@@ -208,6 +193,7 @@ class SipCall extends Component {
 	componentDidMount () {
 		const { dispatch } = this.props;
     const {usernumber, realm, pwd, data_url} = this.state
+
 		this.handleFresh()
 		setInterval(() => {
 			dispatch({
@@ -226,6 +212,7 @@ class SipCall extends Component {
 			width: document.body.clientWidth
 		})
 
+    console.log(document.body.clientHeight, document.body.clientWidth)
 		window.addEventListener('resize', () => {
 			this.setState({
 				height: document.body.clientHeight,
@@ -245,7 +232,6 @@ class SipCall extends Component {
 	render () {
 		let {sipUsers, loading} = this.props
 		let {height, width, selectedUsers, hasPoCDevice, usernumber, pwd, socket_url, realm, data_url} = this.state
-
 		return(
 			<div
 				className={`${styles.sipcall} ${baseStyles['flex']}`}
@@ -255,8 +241,11 @@ class SipCall extends Component {
                height={height-112}
 							 width={width > 1500 ? 400 : 300}
 							 users={this.usersOfUpMyself()}
-               usersMap= {this.getUsersMap()}
+               usersMap= {sipUsers.usersMap}
 							 departments={sipUsers.departments}
+							 originDepartments={sipUsers.originDepartments}
+							 parentIdMap={sipUsers.parentIdMap}
+							 departmentsMap={sipUsers.departmentsMap}
 							 loading={loading}
 							 onlineIds={sipUsers.onlineUserIds}
 							 getSelectedUserIds={this.getSelectedUsers}

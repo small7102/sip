@@ -59,4 +59,7 @@
 .icon-chufadaodaxiao::after {
   content: '\e8ca';
 }
+.icon-bumen::after {
+  content: '\e758';
+}
 /*# sourceMappingURL=./iconfont.css.map */

@@ -28,6 +28,10 @@ export async function getOnlineUsers(params) {
   return request(`${params.data_url}/api/h5/get_online_user.php?${getParams(params)}`, options);
 }
 
+export async function getGroups (params) {
+  return request(`${params.data_url}/api/h5/getsolid_group.php?${getParams(params)}`, options);
+}
+
 export async function getCallRecords(params) {
   const _params = getParams(params,false)
   let data =''

@@ -31,11 +31,30 @@
 			border-top-color: #111e4d;
   		border-left-color: #111e4d;
 		}
-		
+
 	}
 }
 
-.tree {	
+.tab-wrap{
+  :global{
+    .ant-tabs-bar{
+      border-bottom: 1px solid rgba(127, 137, 242, .7);
+      margin: 0;
+    }
+    .ant-tabs-card-bar .ant-tabs-tab{
+      border: 1px solid rgba(127, 137, 242, .7) !important;
+      background-color: #5f636e75 !important;
+    }
+    .ant-tabs-card-bar .ant-tabs-tab-active {
+      color: #ffffff !important;
+      background: #3e79f2 !important;
+      border-color: rgba(127, 137, 242, .7) !important;
+      border-bottom: 1px solid rgba(127, 137, 242, .7) !important;
+    }
+  }
+}
+
+.tree {
 	:global{
 		.ant-tree-switcher{
 			background: none !important;

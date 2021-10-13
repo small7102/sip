@@ -4,11 +4,13 @@ import styles from './Users.less'
 import baseStyles from '../assets/base.less'
 import Box from '../Box/Box'
 import VoiceRecords from '../VoiceRecords';
-import { Input, Checkbox, Avatar, Icon, Popover, Spin, Button, Tree } from 'antd';
+import Groups from '../Groups'
+import { Input, Checkbox, Avatar, Icon, Popover, Spin, Button, Tree, Tabs } from 'antd';
 import '../../Exception/style.less';
-import { useHistory } from 'react-router';
 const ITEM_HEIGHT = 50
 const { TreeNode } = Tree;
+const { TabPane } = Tabs
+let scrollTop = 0
 export default
 class Users extends Component {
 	constructor (props) {
@@ -30,9 +32,11 @@ class Users extends Component {
 		visible: false,
     currentItem: null,
     drawerRef: null,
+    groupsRef: null,
     arrowUp: true,
     usersMap: {},
-		expandedKeys: []
+		expandedKeys: [],
+    autoExpandParent: true
 	}
 
   getOnlineUpUsers () {
@@ -80,9 +84,11 @@ class Users extends Component {
 	}
 
   removeUserById (id) {
-    const {selectedUserIds} = this.state
+    const {selectedUserIds, groupsRef} = this.state
     const _selectedUserIds = id ? selectedUserIds.filter(item => item != id) : []
     this.setState({selectedUserIds: _selectedUserIds})
+    groupsRef && groupsRef.removeUserById(id)
+    console.log(767676777, id, groupsRef)
   }
 
 	handleSearch (e) {
@@ -106,21 +112,62 @@ class Users extends Component {
 	}
 
 	handleSelectSearchItem (user) {
-		const users = this.getOnlineUpUsers()
 		const {selectedUserIds} = this.state
-    const {height} = this.props
+    const {departmentsMap} = this.props
 		let ids = [...selectedUserIds]
+    scrollTop = 0
 
 		if (!ids.includes(user.usr_number)) ids.unshift(user.usr_number)
 		this.onSelectedUsersChange(ids)
 
+    
 		// 找出当前成员在列表中的位置
-		let index = users.findIndex(item => item.usr_number == user.usr_number)
-    let userRef = document.getElementById('userRef')
-    userRef.scrollTop = (index+1)*ITEM_HEIGHT - height + 300
-		console.log(index, (index+1)*ITEM_HEIGHT, selectedUserIds)
-		this.setState({inpVal: '',searchList: []})
+		this.setState({
+      inpVal: '',
+      searchList: [],
+      expandedKeys: this.getExpandedKeys(user.usr_dep_uuid),
+      autoExpandParent: false
+    }, () => {
+      let department = departmentsMap[user.usr_dep_uuid],
+          userIndex = this.getOnlines(department.users||[]).findIndex(item => item.usr_number === user.usr_number),
+          userDom = document.getElementsByClassName('antd-pro-pages-call-users-users-tree-child')[0],
+          userClinetHeight = userDom && userDom.clientHeight || 53
+      scrollTop += userIndex*userClinetHeight
+
+      // console.log(scrollTop,3,userIndex+1,this.getOnlines(department.users||[]))
+      let userRef = document.getElementById('userRef')
+      userRef.scrollTop = scrollTop - 40
+    })
 	}
+
+  getExpandedKeys (uuid, result=[], i = 0) {
+    const {departmentsMap, departments, originDepartments, parentIdMap} = this.props
+    let department = departmentsMap[uuid]
+
+    result.unshift(uuid)
+
+    if (i === 0) { // 找到了他的上级部门
+      let deep = department.dep_level.length / 3, parentId
+      parentId  = deep === 1 ? '0' : department.dep_level.substr(0, (deep-1) * 3)
+      let arr = parentIdMap[parentId] || []
+      let departmentIndex = arr.findIndex(item => item.dep_uuid === uuid)
+
+      scrollTop = 33 * departmentIndex
+    }
+
+    if (department.parentId=='0') {
+      scrollTop += 33 * (i+1)
+      return result
+    }
+
+    let _uuid = ''
+    originDepartments.forEach(item => {
+      if (item.dep_level ===department.parentId) _uuid = item.dep_uuid
+    })
+    i++
+    this.getExpandedKeys(_uuid, result, i)
+    return result
+  }
 
   handleMore (e, item) {
     const {clientX, clientY} = e
@@ -152,11 +199,20 @@ class Users extends Component {
 		this.setState({visible: false})
 	}
 
+  onSelectTree = (e) => {
+    console.log(e,11222)
+  }
+
+  onExpand = (e) => {
+    this.setState({
+      expandedKeys: e
+    })
+  }
+
   componentDidMount(){
       this.props.onRef(this)
-
+      this.setDefaultKeys()
       window.addEventListener('click', (event)=> {
-        // event.stopImmediatePropagation()
         this.setState({dropItem: null})
       })
   }
@@ -251,15 +307,19 @@ class Users extends Component {
     this.setState({drawerRef: ref})
   }
 
+  onGroupsRef =(ref) => {
+    this.setState({groupsRef: ref})
+  }
+
 
 	renderTreeNodes = (data, level = 1) => {
-		const {usernumber, onlineIds=[]} = this.props
+		const {usernumber, onlineIds=[], departmentsMap} = this.props
 		data = this.getOnlines(data)
 
 		return data.map((item, index) => {
       if (item.children) {
         return (
-          <TreeNode 
+          <TreeNode
 						title={
 							<div>
 									<i
@@ -268,8 +328,8 @@ class Users extends Component {
 									></i>
 								<span>{item.dep_name}</span>
 							</div>
-						} 
-						key={item.dep_uuid} 
+						}
+						key={item.dep_uuid}
 						dataRef={item}
 						className={styles['tree-parent']}
 						checkable={!!item.children.length}
@@ -279,12 +339,12 @@ class Users extends Component {
           </TreeNode>
         );
       }
-      return <TreeNode 
-								key={item.usr_number} 
+      return <TreeNode
+								key={item.usr_number}
 								className={styles['tree-child']}
 								disableCheckbox={item.usr_number === usernumber}
 								title ={
-									<div 
+									<div
 										className={`${onlineIds.includes(item.usr_number) ? styles['online'] : styles['offline']} ${baseStyles['flex']} ${baseStyles['align-center']}`}
 									>
 											<Avatar
@@ -297,7 +357,7 @@ class Users extends Component {
 													style={{fontSize: `${item.usr_type === 'dispatch' ? 18 : 22}px`}}
 												></i>
 											</Avatar>
-										<div 
+										<div
 											className={`${styles['item-name']} ${baseStyles['text-overflow']} ${baseStyles['flex-item']}`}
 											style={{width: `${105-(level-1)*16}px`}}
 										>
@@ -321,39 +381,43 @@ class Users extends Component {
 											</i>
 									</div>
 								</div>
-								} 
-								{...item} 
+								}
+								{...item}
 							/>;
     })
 	}
-		
+
 
 	treeDom () {
 		const {departments=[]} = this.props
+
+    const {autoExpandParent, expandedKeys, selectedUserIds}= this.state
 		return (
       <Tree
 				checkable
-				switcherIcon={<Icon type="down" />}
 				showIcon={true}
 				className={styles.tree}
 				onCheck={this.onSelectedUsersChange}
-				checkedKeys={this.state.selectedUserIds}
-				defaultExpandedKeys={departments[0] && [departments[0].dep_uuid] || []}
+				checkedKeys={selectedUserIds}
+        onSelect={this.onSelectTree}
+        autoExpandParent= {autoExpandParent}
+        onExpand={this.onExpand}
+        expandedKeys={expandedKeys}
       >
 				{this.renderTreeNodes(departments || [])}
       </Tree>
     );
 	}
 
-	componentWillUnmount () {
+	setDefaultKeys () {
 		const {departments} = this.props
 		this.setState({
-			expandedKeys: departments[0] && [departments[0].dep_uuid] || []
+			expandedKeys: departments && departments[0] && [departments[0].dep_uuid] || []
 		})
 	}
 
 	render () {
-		let {height, width = 360, loading, usernumber, pwd, realm, dataUrl, usersMap} = this.props
+		let {height, width = 360, loading, usernumber, pwd, realm, dataUrl, usersMap, onlineIds} = this.props
     const {selectedUserIds, dropItem, visible} = this.state
 
 		return(
@@ -374,46 +438,63 @@ class Users extends Component {
 				height={(height)}
 				width={width}
 				content={
-					<div className="m-users-wrap">
-						{dropItem && this.arrowDom()}
-						{this.searchDom()}
-						{loading ?
-							(
-								<div
-									className={`${baseStyles['w100']} ${baseStyles.flex} ${baseStyles['align-center']}  ${baseStyles['justify-center']}`}
-									style={{height: `${height-200}px`}}
-								>
-									<Spin />
-								</div>
-							)
-						: (<Checkbox.Group
-							className={`${baseStyles['w100']}  ${styles['m-inp']}`}
-							value={selectedUserIds}
-							onChange={this.onSelectedUsersChange}
-						>
-							<ul
-								className={`${styles['list-wrap']} ${baseStyles['scroll-bar']} ${baseStyles['mt10']}`}
-                style={{height: `${height-100}px`}}
-								id="userRef"
-							>
-								{/* {this.listDom()} */}
-								{this.treeDom()}
-							</ul>
-						</Checkbox.Group>)
-						}
-						<VoiceRecords
-							visible={visible}
-							usernumber={usernumber}
-							pwd = {pwd}
-							realm = {realm}
-              height={height}
-              dataUrl={dataUrl}
-							users={this.getOnlineUpUsers()}
-              usersMap={usersMap}
-							onVoiceClose={this.onVoiceClose}
-              onRef={this.onRef}
-						/>
-					</div>
+          <Tabs className={styles['tab-wrap']} defaultActiveKey="1" type="card" size="small">
+            <TabPane tab="通讯录" key="1">
+                <div className="m-users-wrap">
+                  {dropItem && this.arrowDom()}
+                  {this.searchDom()}
+                  {loading ?
+                    (
+                      <div
+                        className={`${baseStyles['w100']} ${baseStyles.flex} ${baseStyles['align-center']}  ${baseStyles['justify-center']}`}
+                        style={{height: `${height-200}px`}}
+                      >
+                        <Spin />
+                      </div>
+                    )
+                  : (<Checkbox.Group
+                    className={`${baseStyles['w100']}  ${styles['m-inp']}`}
+                    value={selectedUserIds}
+                    onChange={this.onSelectedUsersChange}
+                  >
+                    <ul
+                      className={`${styles['list-wrap']} ${baseStyles['scroll-bar']} ${baseStyles['mt10']}`}
+                      style={{height: `${height-160}px`}}
+                      id="userRef"
+                    >
+                      {/* {this.listDom()} */}
+                      {this.treeDom()}
+                    </ul>
+                  </Checkbox.Group>)
+                  }
+                  <VoiceRecords
+                    visible={visible}
+                    usernumber={usernumber}
+                    pwd = {pwd}
+                    realm = {realm}
+                    height={height}
+                    dataUrl={dataUrl}
+                    users={this.getOnlineUpUsers()}
+                    usersMap={usersMap}
+                    onVoiceClose={this.onVoiceClose}
+                    onRef={this.onRef}
+                  />
+                </div>
+              
+            </TabPane>
+            <TabPane tab="固定群组" key="2">
+              <Groups
+                usernumber={usernumber}
+                dataUrl={dataUrl}
+                pwd={pwd}
+                realm = {realm}
+                onlineIds={onlineIds}
+                height={height-90}
+                onGroupsRef={this.onGroupsRef}
+                getSelectedUserIds={this.onSelectedUsersChange}
+              />
+            </TabPane>
+          </Tabs>
 				}>
 			</Box>
 		)
