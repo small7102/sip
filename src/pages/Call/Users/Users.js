@@ -204,7 +204,6 @@ class Users extends Component {
 
   onSelectTree = (e) => {
 		let {selectedUserIds} = this.state
-		console.log(e, 7777)
     if (e && e.length === 1) {
 			if (e[0].includes('-')) {
 				this.setState({
