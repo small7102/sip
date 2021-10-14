@@ -4,7 +4,7 @@ import iconfont from '../assets/iconfont.less'
 import styles from '../Users/Users.less'
 import {getGroups} from '../services'
 import { Tree, Avatar } from 'antd';
-import classNames from 'classnames';
+import Search from '../Search';
 const { TreeNode } = Tree;
 
 export default
@@ -29,39 +29,85 @@ class Groups extends Component {
       data_url: dataUrl,
       moreParams: {roomid}
     }).then(res => {
-      console.log(res,6767)
       if (res && res.code === '1') {
-        this.setState({groupList: res.value})
+        let list = res.value
+        this.setState({groupList: list}, () => {
+          if (list.length) this.setState({expandedKeys: [list[list.length-1].group_uuid]})
+        })
       }
     }).catch(err => {
-      console.log(err, 9999)
     })
+  }
+
+  getUsersByGroups () {
+    const {groupList} = this.state
+    let _users = []
+    groupList.forEach(group => {
+      let {users, group_name, group_uuid, call_grouptype, level, ishave_poc, is_level_on, group_hostextension} = group
+      let groupUsers = users.map(item => {
+        return {...item, groupInfo: {group_name, group_uuid, call_grouptype, level, ishave_poc, is_level_on, group_hostextension}}
+      })
+
+      _users = _users.concat(groupUsers)
+    })
+
+    return _users
   }
 
   handleMore () {
 
   }
 
-  onCheck = (data) => {
+  onCheck = (data, isSearch = false) => {
     let {expandedKeys} = this.state
-    let users = []
+    let users = [], expandKey, userId
     if (data.length) {
       
       data.forEach(item => {
         if (item.includes('+')) {
           let arr = item.split('+')
-          !users.includes(arr[1]) && users.push(arr[1])
+          expandKey = arr[0]
+          userId = arr[1]
+          !users.includes(userId) && users.push(userId) 
+          !expandedKeys.includes(expandKey) && expandedKeys.push(expandKey)
         } else {
-          
           if (!expandedKeys.includes(item)) {
             expandedKeys.push(item)
           }
         }
       })
-      console.log(users, expandedKeys)
     }
     this.props.getSelectedUserIds(users)
-    this.setState({expandedKeys, selectedUserIds: data})
+    this.setState({expandedKeys, selectedUserIds: data}, () => {
+      if (isSearch) this.handleScroll(expandKey, userId)
+    })
+  }
+
+  handleScroll (expandKey, userId) {
+    let {expandedKeys, groupList} = this.state
+    let groupIndex = groupList.findIndex(item => item.group_uuid === expandKey), scrollTop,
+        groupsRefHeight = this.props.height - 160
+
+    scrollTop = (groupIndex + 1) * 42
+    
+    groupList.forEach((item, index) => {
+      if (expandedKeys.includes(item.group_uuid)) {
+        let users = this.upOnlineUsers(item.users)
+        let selectedIndex = users.findIndex(user => user.usr_mapnum === userId)
+        // 选择的成员就在这个组
+        if (selectedIndex>-1 && item.group_uuid === expandKey) {
+          scrollTop += (selectedIndex+1) * 53
+        } else {
+          if (index < groupIndex) scrollTop += (item.users.length) * 53
+        }
+      }
+    })
+
+    
+    let groupRef = document.getElementById('groupRef')
+    setTimeout(() => {
+      groupRef.scrollTop = groupsRefHeight > scrollTop ? 0 : scrollTop - groupsRefHeight
+    }, 200)
   }
 
   removeUserById (id) {
@@ -70,9 +116,44 @@ class Groups extends Component {
     this.setState({selectedUserIds: _selectedUserIds})
   }
   
+  handleSelectSearchItem = (user) => {
+    let {selectedUserIds} = this.state
+    
+    if (!selectedUserIds.includes(`${user.groupInfo.group_uuid}+${user.usr_mapnum}`)) selectedUserIds.push(`${user.groupInfo.group_uuid}+${user.usr_mapnum}`)
+    this.onCheck(selectedUserIds, true)
+  }
+
+  upOnlineUsers (users) {
+    const {onlineIds, usernumber} = this.props
+    let onlineUsers = [], offlineUsers = []
+
+    users.forEach(item => {
+      onlineIds.includes(item.usr_mapnum) ? item.usr_mapnum === usernumber ? onlineUsers.unshift(item) : onlineUsers.push(item) : offlineUsers.push(item)
+    })
+
+    return onlineUsers.concat(offlineUsers)
+  }
+
+
   onExpand = (e) => {
-    console.log(e)
     this.setState({expandedKeys: e})
+  }
+
+  onSelect = (e) => {
+    let {selectedUserIds} = this.state
+		console.log(e, 7777)
+    if (e && e.length === 1) {
+			if (e[0].includes('+')) {
+				this.setState({
+					expandedKeys: e
+				})
+			} else {
+				selectedUserIds.includes(e[0]) ? selectedUserIds.filter(item => item !== e[0]) : selectedUserIds.push(e[0])
+				this.setState({
+					selectedUserIds
+				})
+			}
+		}
   }
 
   renderTreeNodes = (data, group_uuid) => {
@@ -95,7 +176,7 @@ class Groups extends Component {
         checkable={!!item.users.length}
         disableCheckbox={!item.users.length}
       >
-        {this.renderTreeNodes(item.users, item.group_uuid)}
+        {this.renderTreeNodes(this.upOnlineUsers(item.users), item.group_uuid)}
       </TreeNode>
       :
       <TreeNode
@@ -118,7 +199,7 @@ class Groups extends Component {
               </Avatar>
             <div
               className={`${styles['item-name']} ${baseStyles['text-overflow']} ${baseStyles['flex-item']}`}
-              style={{width: `${280}px`}}
+              style={{width: `${105}px`}}
             >
               <div className={`${baseStyles['text-overflow']}`} title={item.usr_name}>
                 {item.usr_name} {item.usr_mapnum === usernumber ? '(自己)' : ''}
@@ -153,18 +234,32 @@ class Groups extends Component {
 
   render () {
     const {expandedKeys, groupList, selectedUserIds} = this.state
+    const {height, width, usernumber} = this.props
     return(
-      <div className={baseStyles['scroll-bar']} style={{height: `${this.props.height}px`}}>
-        <Tree
-          checkable
-          className={styles.tree}
-          onCheck={this.onCheck}
-          onExpand={this.onExpand}
-          checkedKeys={selectedUserIds}
-          expandedKeys={expandedKeys}
+      <div className={baseStyles['scroll-bar']}>
+        <Search 
+          usernumber={usernumber}
+          users={this.getUsersByGroups()} 
+          width={width}
+          handleSelectSearchItem={this.handleSelectSearchItem}
+        />
+        <div 
+          style={{height: `${height-160}px`}}
+          className={`${styles['list-wrap']} ${baseStyles['scroll-bar']} ${baseStyles['mt10']}`}
+          id="groupRef"
         >
-          {this.renderTreeNodes(groupList)}
-        </Tree>
+          <Tree
+            checkable
+            className={styles.tree}
+            onCheck={this.onCheck}
+            onExpand={this.onExpand}
+            onSelect={this.onSelect}
+            checkedKeys={selectedUserIds}
+            expandedKeys={expandedKeys}
+          >
+            {this.renderTreeNodes(groupList)}
+          </Tree>
+        </div>
       </div>
     )
   }

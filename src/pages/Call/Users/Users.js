@@ -7,7 +7,8 @@ import VoiceRecords from '../VoiceRecords';
 import Groups from '../Groups'
 import { Input, Checkbox, Avatar, Icon, Popover, Spin, Button, Tree, Tabs } from 'antd';
 import '../../Exception/style.less';
-const ITEM_HEIGHT = 50
+import Search from '../Search'
+
 const { TreeNode } = Tree;
 const { TabPane } = Tabs
 let scrollTop = 0
@@ -88,7 +89,6 @@ class Users extends Component {
     const _selectedUserIds = id ? selectedUserIds.filter(item => item != id) : []
     this.setState({selectedUserIds: _selectedUserIds})
     groupsRef && groupsRef.removeUserById(id)
-    console.log(767676777, id, groupsRef)
   }
 
 	handleSearch (e) {
@@ -113,7 +113,7 @@ class Users extends Component {
 
 	handleSelectSearchItem (user) {
 		const {selectedUserIds} = this.state
-    const {departmentsMap} = this.props
+    const {departmentsMap, height} = this.props
 		let ids = [...selectedUserIds]
     scrollTop = 0
 
@@ -131,32 +131,35 @@ class Users extends Component {
       let department = departmentsMap[user.usr_dep_uuid],
           userIndex = this.getOnlines(department.users||[]).findIndex(item => item.usr_number === user.usr_number),
           userDom = document.getElementsByClassName('antd-pro-pages-call-users-users-tree-child')[0],
-          userClinetHeight = userDom && userDom.clientHeight || 53
-      scrollTop += userIndex*userClinetHeight
+          userClinetHeight = userDom && userDom.clientHeight || 52
+					scrollTop += (userIndex+1)*userClinetHeight
 
-      // console.log(scrollTop,3,userIndex+1,this.getOnlines(department.users||[]))
       let userRef = document.getElementById('userRef')
-      userRef.scrollTop = scrollTop - 40
+			setTimeout(() => {
+				userRef.scrollTop = (height-160) > scrollTop ? 0 : scrollTop - (height-160)
+			}, 200)
     })
 	}
 
   getExpandedKeys (uuid, result=[], i = 0) {
-    const {departmentsMap, departments, originDepartments, parentIdMap} = this.props
+    const {departmentsMap, departments, originDepartments, parentIdMap, flatParentIdMap} = this.props
     let department = departmentsMap[uuid]
+		let parentItemDom = document.getElementsByClassName('ant-tree-treenode-switcher-close')[0],
+				parentItemHeight = 42
 
     result.unshift(uuid)
 
     if (i === 0) { // 找到了他的上级部门
       let deep = department.dep_level.length / 3, parentId
       parentId  = deep === 1 ? '0' : department.dep_level.substr(0, (deep-1) * 3)
-      let arr = parentIdMap[parentId] || []
-      let departmentIndex = arr.findIndex(item => item.dep_uuid === uuid)
+      let arr = flatParentIdMap[parentId] || []
+      let sameLevelDepartments = arr.filter(item => item.dep_uuid)
 
-      scrollTop = 33 * departmentIndex
+      scrollTop = parentItemHeight * (sameLevelDepartments.length)
     }
 
     if (department.parentId=='0') {
-      scrollTop += 33 * (i+1)
+      scrollTop += parentItemHeight * (i+1)
       return result
     }
 
@@ -200,7 +203,20 @@ class Users extends Component {
 	}
 
   onSelectTree = (e) => {
-    console.log(e,11222)
+		let {selectedUserIds} = this.state
+		console.log(e, 7777)
+    if (e && e.length === 1) {
+			if (e[0].includes('-')) {
+				this.setState({
+					expandedKeys: e
+				})
+			} else {
+				selectedUserIds.includes(e[0]) ? selectedUserIds.filter(item => item !== e[0]) : selectedUserIds.push(e[0])
+				this.setState({
+					selectedUserIds
+				})
+			}
+		}
   }
 
   onExpand = (e) => {
@@ -254,55 +270,6 @@ class Users extends Component {
 		)
 	}
 
-	seachResultDom () {
-		const {searchList} = this.state
-
-		return searchList.map((item, index) => {
-			return (
-				<div
-					key={index}
-					className={`${baseStyles['m-item']} ${styles['search-item']}`}
-					onClick={() => {
-						this.handleSelectSearchItem(item)
-					}}
-				>
-					{item.usr_name}
-				</div>
-			)
-		})
-	}
-
-	searchDom () {
-		const {inpVal} = this.state
-		const {width} = this.props
-		return(
-			<Popover
-				placement="bottom"
-				trigger="focus"
-				overlayClassName={styles.pop}
-				style={{width: `${width}px`, backgroundColor: '#16255b'}}
-				content={
-					<div
-              className={baseStyles['scroll-bar']}
-							style={{ width: `${width-40}px`, maxHeight: '400px'}}>
-              <div className={styles['result-title']}>搜索结果：</div>
-              {	this.seachResultDom() }
-					</div>
-				}
-			>
-				<Input
-					placeholder="输入名称"
-					prefix={<Icon type="search" style={{ color: 'rgba(255,255,255,.8)' }} />}
-					value={inpVal}
-          className={`${baseStyles['mt10']} ${styles['m-inp']}`}
-					onChange={
-						(e) => this.handleSearch(e)
-					}
-				/>
-			</Popover>
-		)
-	}
-
   onRef =(ref) => {
     this.setState({drawerRef: ref})
   }
@@ -311,6 +278,10 @@ class Users extends Component {
     this.setState({groupsRef: ref})
   }
 
+	onGroupsScroll (scrollTop) {
+		let userRef = document.getElementById('userRef')
+    userRef.scrollTop = scrollTop
+	}
 
 	renderTreeNodes = (data, level = 1) => {
 		const {usernumber, onlineIds=[], departmentsMap} = this.props
@@ -417,7 +388,7 @@ class Users extends Component {
 	}
 
 	render () {
-		let {height, width = 360, loading, usernumber, pwd, realm, dataUrl, usersMap, onlineIds} = this.props
+		let {height, width = 360, loading, usernumber, pwd, realm, dataUrl, usersMap, onlineIds, users} = this.props
     const {selectedUserIds, dropItem, visible} = this.state
 
 		return(
@@ -442,7 +413,13 @@ class Users extends Component {
             <TabPane tab="通讯录" key="1">
                 <div className="m-users-wrap">
                   {dropItem && this.arrowDom()}
-                  {this.searchDom()}
+									<Search 
+										usernumber={usernumber}
+										users={users} 
+										width={width}
+										handleSelectSearchItem={this.handleSelectSearchItem}
+									/>
+                  {/* {this.searchDom()} */}
                   {loading ?
                     (
                       <div
@@ -486,10 +463,13 @@ class Users extends Component {
               <Groups
                 usernumber={usernumber}
                 dataUrl={dataUrl}
+								users={users}
+								width={width}
                 pwd={pwd}
                 realm = {realm}
                 onlineIds={onlineIds}
-                height={height-90}
+                height={height}
+								onScroll={this.onGroupsScroll}
                 onGroupsRef={this.onGroupsRef}
                 getSelectedUserIds={this.onSelectedUsersChange}
               />

@@ -246,6 +246,7 @@ class SipCall extends Component {
 							 originDepartments={sipUsers.originDepartments}
 							 parentIdMap={sipUsers.parentIdMap}
 							 departmentsMap={sipUsers.departmentsMap}
+							 flatParentIdMap={sipUsers.flatParentIdMap}
 							 loading={loading}
 							 onlineIds={sipUsers.onlineUserIds}
 							 getSelectedUserIds={this.getSelectedUsers}
