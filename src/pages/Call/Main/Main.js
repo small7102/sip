@@ -190,6 +190,10 @@ class SipCall extends Component {
 		});
 	}
 
+  handleGroupCall = (data) => {
+    this.state.callRef.handleGroupCall(data)
+  }
+
 	componentDidMount () {
 		const { dispatch } = this.props;
     const {usernumber, realm, pwd, data_url} = this.state
@@ -257,6 +261,7 @@ class SipCall extends Component {
                dataUrl={data_url}
                callByOne={this.callByOne}
                handleFresh={this.handleFresh}
+               handleGroupCall={this.handleGroupCall}
 				/>
 				<Call height={height-112}
 							selectedUsers={selectedUsers}

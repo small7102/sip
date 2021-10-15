@@ -282,6 +282,10 @@ class Users extends Component {
     userRef.scrollTop = scrollTop
 	}
 
+  handleGroupCall = (data) => {
+    this.props.handleGroupCall(data)
+  }
+
 	renderTreeNodes = (data, level = 1) => {
 		const {usernumber, onlineIds=[], departmentsMap} = this.props
 		data = this.getOnlines(data)
@@ -471,6 +475,7 @@ class Users extends Component {
 								onScroll={this.onGroupsScroll}
                 onGroupsRef={this.onGroupsRef}
                 getSelectedUserIds={this.onSelectedUsersChange}
+                handleGroupCall={this.handleGroupCall}
               />
             </TabPane>
           </Tabs>

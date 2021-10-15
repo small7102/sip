@@ -67,9 +67,11 @@
 }
 .tree .tree-parent :global .ant-tree-node-content-wrapper {
   height: 30px !important;
+  padding-top: 5px;
 }
 .tree .tree-child :global .ant-tree-node-content-wrapper {
   height: 44px !important;
+  padding-top: 5px;
 }
 .user-item {
   height: 50px;

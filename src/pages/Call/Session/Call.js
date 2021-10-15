@@ -312,6 +312,7 @@ export default class extends Component {
 						duration: 0,
 						talkingUser: null,
             halfCall: true,
+            groupCall:false,
 						ptting: false
 					})
 					oSipSessionCall = null;
@@ -357,6 +358,22 @@ export default class extends Component {
 		console.log('清空计时器')
   }
 
+  handleGroupCall = (data) => {
+    this.setState({
+      groupCall: true,
+      selectedUsers: data.users.map(item => {
+        return {...item, usr_number: item.mapnum}
+      })
+    }, ()=>{
+      console.log(data.users.map(item => {
+        return {...item, usr_number: item.mapnum}
+      }))
+      this.sipCall(data)
+    })
+
+    
+  }
+
 	randomRoom () {
 		let roomId = '111'
 		for (let i = 0;i < 10; i++) {
@@ -367,17 +384,17 @@ export default class extends Component {
 	}
 
 	// 开始拨号
-	sipCall () {
+	sipCall (params) {
     const {netNormal, calledUsers, oConfigCall, callConnected, sipAvalible} = this.state
     const {selectedUsers, account} = this.props
-		if(!netNormal){
-      this.mMessage('error', 'scoket连接失败')
-      return
-    }
-		if(!sipAvalible){
-      this.mMessage('error', 'scoket连接中...')
-      return
-    }
+		// if(!netNormal){
+    //   this.mMessage('error', 'scoket连接失败')
+    //   return
+    // }
+		// if(!sipAvalible){
+    //   this.mMessage('error', 'scoket连接中...')
+    //   return
+    // }
 
     // 接听别人的通话
     if (!selectedUsers.length && calledUsers.length && !callConnected) { // 接听别人的通话
@@ -387,7 +404,6 @@ export default class extends Component {
 			this.setState({connectedMemberObj: obj, calling: false})
 
       this.saveRecords()
-			console.log(account.usernumber, '发送接收指令')
 			return
     }
 
@@ -405,7 +421,7 @@ export default class extends Component {
 			oSipSessionCall = oSipStack.newSession('call-audio', oConfigCall)
 			this.setState({sessionId: oSipSessionCall.o_session.i_id, calling: true})
 
-			let roomId = this.randomRoom()
+			let roomId = params ? params.group_hostextension : this.randomRoom()
 			let config = {...oConfigCall}
 			// console.log(this.state.sessionId, config, '会话id')
 			let tempGroup = oSipSessionCall.call(roomId, {
@@ -414,7 +430,7 @@ export default class extends Component {
 			})
 			if (tempGroup !=0) {
 				oSipSessionCall = null
-				this.setState({calling: false, sessionId: null})
+				this.setState({calling: false, sessionId: null, groupCall: false})
         this.mMessage('error','呼叫失败')
 			} else {
         this.setState({calledUsers: [...selectedUsers]})
@@ -682,7 +698,7 @@ export default class extends Component {
 
 	selectedUsersDom () {
 		const {selectedUsers=[]} = this.props
-    const {sessionId, talkingUser, calledUsers, connectedMemberObj, userCardSty, halfCall, callConnected} = this.state
+    const {sessionId, groupCall, talkingUser, calledUsers, connectedMemberObj, userCardSty, halfCall, callConnected} = this.state
     const users = calledUsers.length ? calledUsers : selectedUsers || []
     // const users = selectedUsers
 		let sty = this.getUserCardStyleByNum(users.length)
@@ -703,7 +719,7 @@ export default class extends Component {
                         [<span className={`${styles['state-icon']} ${styles[connectedMemberObj && connectedMemberObj[user.usr_number] || (!halfCall && callConnected) ? 'light': 'dark']}`}></span>,
                         <div className={`${baseStyles.ft12} ${styles['user-state']} ${baseStyles['flex-item']}`}>
                           {connectedMemberObj && connectedMemberObj[user.usr_number] || (!halfCall && callConnected) ? '已接入' : '连接中'}
-                        </div>] :
+                        </div>] : !groupCall &&
 												<Icon
 													type="close"
 													className={`${baseStyles['pointer']} ${baseStyles.ft16}`}

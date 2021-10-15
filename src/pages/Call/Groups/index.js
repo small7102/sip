@@ -134,6 +134,10 @@ class Groups extends Component {
     return onlineUsers.concat(offlineUsers)
   }
 
+  handleGroupCall = (item) => {
+    this.props.handleGroupCall(item)
+  }
+
 
   onExpand = (e) => {
     this.setState({expandedKeys: e})
@@ -141,7 +145,6 @@ class Groups extends Component {
 
   onSelect = (e) => {
     let {selectedUserIds} = this.state
-		console.log(e, 7777)
     if (e && e.length === 1) {
 			if (e[0].includes('+')) {
 				this.setState({
@@ -162,12 +165,23 @@ class Groups extends Component {
       return item.users ? 
       <TreeNode
         title={
-          <div>
-              <i
-                className={`${iconfont['m-icon']} ${iconfont['icon-bumen']}`}
-                style={{fontSize: `16px`}}
-              ></i>
-            <span>{item.group_name}</span>
+          <div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
+            <i
+              className={`${iconfont['m-icon']} ${iconfont['icon-bumen']}`}
+              style={{fontSize: `16px`}}
+            ></i>
+            <span className={baseStyles['text-overflow']}
+             style={{width: '162px'}}>{item.group_name}</span>
+            <i title="群组通话" 
+               className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft16']}`}
+               onClick={
+                 (e)=>{
+                  e.persist()
+                  e.stopPropagation()
+                  this.handleGroupCall(item)
+                 }
+               }
+            ></i>
           </div>
         }
         key={item.group_uuid}
@@ -184,43 +198,43 @@ class Groups extends Component {
         className={styles['tree-child']}
         disableCheckbox={item.usr_mapnum === usernumber}
         title ={
-          <div
-            className={`${onlineIds.includes(item.usr_mapnum) ? styles['online'] : styles['offline']} ${baseStyles['flex']} ${baseStyles['align-center']}`}
-          >
-              <Avatar
-                style={{marginTop: '-2px', marginRight: '8px', backgroundColor:  `${item.usr_type === 'dispatch' ? '#4e86c7' : '#87d068'}`}}
-                shape="square"
-                size={32}
-              >
-                <i
-                  className={`${iconfont['m-icon']} ${iconfont[item.usr_type === 'dispatch' ? 'icon-diannao' : 'icon-chengyuan']}`}
-                  style={{fontSize: `${item.usr_type === 'dispatch' ? 18 : 22}px`}}
-                ></i>
-              </Avatar>
             <div
-              className={`${styles['item-name']} ${baseStyles['text-overflow']} ${baseStyles['flex-item']}`}
-              style={{width: `${105}px`}}
+              className={`${onlineIds.includes(item.usr_mapnum) ? styles['online'] : styles['offline']} ${baseStyles['flex']} ${baseStyles['align-center']}`}
             >
-              <div className={`${baseStyles['text-overflow']}`} title={item.usr_name}>
-                {item.usr_name} {item.usr_mapnum === usernumber ? '(自己)' : ''}
+                <Avatar
+                  style={{marginTop: '-2px', marginRight: '8px', backgroundColor:  `${item.usr_type === 'dispatch' ? '#4e86c7' : '#87d068'}`}}
+                  shape="square"
+                  size={32}
+                >
+                  <i
+                    className={`${iconfont['m-icon']} ${iconfont[item.usr_type === 'dispatch' ? 'icon-diannao' : 'icon-chengyuan']}`}
+                    style={{fontSize: `${item.usr_type === 'dispatch' ? 18 : 22}px`}}
+                  ></i>
+                </Avatar>
+              <div
+                className={`${styles['item-name']} ${baseStyles['text-overflow']} ${baseStyles['flex-item']}`}
+                style={{width: `${105}px`}}
+              >
+                <div className={`${baseStyles['text-overflow']}`} title={item.usr_name}>
+                  {item.usr_name} {item.usr_mapnum === usernumber ? '(自己)' : ''}
+                </div>
+                <div className={`${baseStyles.ft12}`} style={{color: 'rgba(255,255,255,.5)'}}>{item.usr_mapnum}</div>
               </div>
-              <div className={`${baseStyles.ft12}`} style={{color: 'rgba(255,255,255,.5)'}}>{item.usr_mapnum}</div>
+            <div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
+              <span className={`${baseStyles.ft12} ${styles['state']}`}>
+                {onlineIds.includes(item.usr_mapnum) ? '在线' : '离线'}
+              </span>
+              <i
+                className={`${iconfont['icon-gengduo']} ${iconfont['m-icon']} ${styles['more-btn']}`}
+                onClick={(e)=> {
+                  e.persist()
+                  e.stopPropagation()
+                  this.handleMore(e, item)
+                }}
+              >
+                </i>
             </div>
-          <div className={`${baseStyles['flex']} ${baseStyles['align-center']}`}>
-            <span className={`${baseStyles.ft12} ${styles['state']}`}>
-              {onlineIds.includes(item.usr_mapnum) ? '在线' : '离线'}
-            </span>
-            <i
-              className={`${iconfont['icon-gengduo']} ${iconfont['m-icon']} ${styles['more-btn']}`}
-              onClick={(e)=> {
-                e.persist()
-                e.stopPropagation()
-                this.handleMore(e, item)
-              }}
-            >
-              </i>
           </div>
-        </div>
         }
         {...item}
       />;
@@ -248,17 +262,17 @@ class Groups extends Component {
           className={`${styles['list-wrap']} ${baseStyles['scroll-bar']} ${baseStyles['mt10']}`}
           id="groupRef"
         >
-          <Tree
-            checkable
-            className={styles.tree}
-            onCheck={this.onCheck}
-            onExpand={this.onExpand}
-            onSelect={this.onSelect}
-            checkedKeys={selectedUserIds}
-            expandedKeys={expandedKeys}
-          >
-            {this.renderTreeNodes(groupList)}
-          </Tree>
+            <Tree
+              checkable
+              className={styles.tree}
+              onCheck={this.onCheck}
+              onExpand={this.onExpand}
+              onSelect={this.onSelect}
+              checkedKeys={selectedUserIds}
+              expandedKeys={expandedKeys}
+            >
+              {this.renderTreeNodes(groupList)}
+            </Tree>
         </div>
       </div>
     )
