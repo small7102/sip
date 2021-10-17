@@ -64,13 +64,20 @@ class Users extends Component {
 		let _users = []
 
 		if (list.length) {
-			const onlineUsers = [], departments=[]
-			const offlineUsers = list.filter(item => {
+			let onlineUsers = [], departments=[]
+			let offlineUsers = list.filter(item => {
 				let isOnline = onlineIds.includes(item.usr_number)
 				if (!item.usr_number) departments.push(item)
 				if (isOnline) item.usr_number === usernumber ? onlineUsers.unshift(item) : onlineUsers.push(item)
 				return !isOnline && item.usr_number
 			})
+
+      onlineUsers = onlineUsers.sort((prev, next) => {
+        return parseInt(prev.usr_number) - parseInt(next.usr_number) 
+      })
+      offlineUsers = offlineUsers.sort((prev, next) => {
+        return parseInt(prev.usr_number) - parseInt(next.usr_number) 
+      })
 
 			_users = departments.concat(onlineUsers.concat(offlineUsers))
 			return _users
@@ -142,7 +149,7 @@ class Users extends Component {
 	}
 
   getExpandedKeys (uuid, result=[], i = 0) {
-    const {departmentsMap, departments, originDepartments, parentIdMap, flatParentIdMap} = this.props
+    const {departmentsMap, originDepartments, parentIdMap, flatParentIdMap} = this.props
     let department = departmentsMap[uuid]
 		let parentItemDom = document.getElementsByClassName('ant-tree-treenode-switcher-close')[0],
 				parentItemHeight = 42
@@ -214,6 +221,7 @@ class Users extends Component {
 				this.setState({
 					selectedUserIds
 				})
+        this.onSelectedUsersChange(selectedUserIds)
 			}
 		}
   }
@@ -286,6 +294,10 @@ class Users extends Component {
     this.props.handleGroupCall(data)
   }
 
+  getGroups () {
+    this.state.groupsRef && this.state.groupsRef.getGroups()
+  }
+
 	renderTreeNodes = (data, level = 1) => {
 		const {usernumber, onlineIds=[], departmentsMap} = this.props
 		data = this.getOnlines(data)
@@ -322,13 +334,13 @@ class Users extends Component {
 										className={`${onlineIds.includes(item.usr_number) ? styles['online'] : styles['offline']} ${baseStyles['flex']} ${baseStyles['align-center']}`}
 									>
 											<Avatar
-												style={{marginTop: '-2px', marginRight: '8px', backgroundColor:  `${item.usr_type === 'dispatch' ? '#4e86c7' : '#87d068'}`}}
+												style={{marginTop: '-2px', marginRight: '8px', backgroundColor:  `${item.usr_type === 'dispatch' ? '#4e86c7' : item.usr_type === 'poc_term' ? '#17c6bf' :'#87d068'}`}}
 												shape="square"
 												size={32}
 											>
 												<i
-													className={`${iconfont['m-icon']} ${iconfont[item.usr_type === 'dispatch' ? 'icon-diannao' : 'icon-chengyuan']}`}
-													style={{fontSize: `${item.usr_type === 'dispatch' ? 18 : 22}px`}}
+													className={`${iconfont['m-icon']} ${iconfont[item.usr_type === 'dispatch' ? 'icon-diannao' : item.usr_type === 'poc_term' ? 'icon-duijiangji' : 'icon-chengyuan']}`}
+													style={{fontSize: `${item.usr_type === 'dispatch' ? '18px' : item.usr_type === 'poc_term' ? '26px' : '22px'}`}}
 												></i>
 											</Avatar>
 										<div
@@ -412,7 +424,7 @@ class Users extends Component {
 				height={(height)}
 				width={width}
 				content={
-          <Tabs className={styles['tab-wrap']} defaultActiveKey="1" type="card" size="small">
+          <Tabs className={styles['tab-wrap']} defaultActiveKey="1" type="card">
             <TabPane tab="通讯录" key="1">
                 <div className="m-users-wrap">
                   {dropItem && this.arrowDom()}

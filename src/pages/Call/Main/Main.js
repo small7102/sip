@@ -127,7 +127,6 @@ class SipCall extends Component {
   }
 
   saveRecords () {
-    console.log(this.state)
     const {recordsRef} = this.state
     recordsRef && recordsRef.getLocalData()
   }
@@ -158,11 +157,15 @@ class SipCall extends Component {
 
 	tempCallByRecords (data) {
 		const {callRef} = this.state
-		this.setState({
-			selectedUsers: data.users
-		}, () => {
-			callRef.sipCall(data.users)
-		})
+    if (data.type === 2) { // 固定群组呼叫
+      callRef.handleGroupCall(JSON.parse(data.groupData))
+    } else {
+      this.setState({
+        selectedUsers: data.users
+      }, () => {
+        callRef.sipCall()
+      })
+    }
 	}
 
 	handleFresh = () => {
@@ -188,10 +191,15 @@ class SipCall extends Component {
 				data_url
 			}
 		});
+    this.state.userRef && this.state.userRef.getGroups()
 	}
 
   handleGroupCall = (data) => {
-    this.state.callRef.handleGroupCall(data)
+    let users = data.users || []
+    let hasPoC = users.find(item => item.usr_type === 'poc_term')
+    this.setState({hasPoCDevice: hasPoC ? true : false}, () => {
+      this.state.callRef.handleGroupCall(data)
+    })
   }
 
 	componentDidMount () {

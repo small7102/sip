@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "1374549",
+      "name": "对讲机",
+      "font_class": "duijiangji",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "4774868",
+      "name": "部门",
+      "font_class": "bumen",
+      "unicode": "e758",
+      "unicode_decimal": 59224
+    },
+    {
       "icon_id": "847437",
       "name": "成员",
       "font_class": "chengyuan",

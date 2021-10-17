@@ -171,11 +171,11 @@ export default class extends Component {
 
 	// 会话的回调
 	onSipEventSession (e) {
-		const {connectedMemberObj, calledUsers, callConnected} = this.state
+		const {connectedMemberObj, calledUsers, groupCall, callConnected} = this.state
     const {selectedUsers, hasPoCDevice} = this.props
 		const {type, session, description} = e
 
-		console.log(e,123)
+		console.log(e,oSipSessionCall,123)
 		switch (type) {
 			case 'connecting': {
 				break;
@@ -185,8 +185,6 @@ export default class extends Component {
 				let bConnected = (type == 'connected');
 				if (session == oSipSessionRegister) { // 注册登录成功
 					this.setState({sipAvalible: true})
-					// this.mMessage('success', 'socket已连接')
-          console.log('socket已连接',bConnected)
 				} else if (session == oSipSessionCall) {
 					if (description === 'In call') {
 						this.setState({callConnected: true})
@@ -217,8 +215,8 @@ export default class extends Component {
 				break;
 			}
       case 'm_stream_audio_remote_added': {
-        if (hasPoCDevice) {
-          this.setState({callConnected: true})
+        if (hasPoCDevice || groupCall) {
+          this.setState({callConnected: true, calling: false})
           this.waitingTimeCount()
         }
         break;
@@ -243,25 +241,27 @@ export default class extends Component {
                 this.setState({calledUsers: _calledUsers})
               }
             }
+            let obj = connectedMemberObj ? {...connectedMemberObj} : {}
 						if (state == 'add') {
-							let obj = connectedMemberObj ? {...connectedMemberObj} : {}
+              obj[cbInfo.number] = cbInfo
 							// 有人加进会话
-							obj[cbInfo.number] = cbInfo
               this.mMessage('info',`${infoUser.usr_name}接入会话`)
-
+              
               if (!callConnected) {
                 this.waitingTimeCount()
                 this.countTime()
               }
-
+              
 							this.setState({
-								callConnected: true,
+                callConnected: true,
 								calling: false,
 								connectedMemberObj: obj,
 							})
-
+              
 						} else if (state == 'talking') {
+              obj[cbInfo.number] = cbInfo
               this.setState({
+                connectedMemberObj: obj,
                 talkingUser: {...infoUser}
               })
               this.clearWaitingTimer()
@@ -361,13 +361,10 @@ export default class extends Component {
   handleGroupCall = (data) => {
     this.setState({
       groupCall: true,
-      selectedUsers: data.users.map(item => {
-        return {...item, usr_number: item.mapnum}
+      calledUsers: data.users.map(item => {
+        return {...item, usr_number: item.usr_mapnum}
       })
     }, ()=>{
-      console.log(data.users.map(item => {
-        return {...item, usr_number: item.mapnum}
-      }))
       this.sipCall(data)
     })
 
@@ -385,19 +382,23 @@ export default class extends Component {
 
 	// 开始拨号
 	sipCall (params) {
-    const {netNormal, calledUsers, oConfigCall, callConnected, sipAvalible} = this.state
+    const {netNormal, calledUsers, groupCall, oConfigCall, sessionId, calling, callConnected, sipAvalible} = this.state
     const {selectedUsers, account} = this.props
-		// if(!netNormal){
-    //   this.mMessage('error', 'scoket连接失败')
-    //   return
-    // }
-		// if(!sipAvalible){
-    //   this.mMessage('error', 'scoket连接中...')
-    //   return
-    // }
+		if(!netNormal){
+      this.mMessage('error', 'scoket连接失败')
+      return
+    }
+		if(!netNormal){
+      this.mMessage('error', 'scoket连接失败')
+      return
+    }
+		if(calling){
+      this.mMessage('warning', '已有通话在进行...')
+      return
+    }
 
     // 接听别人的通话
-    if (!selectedUsers.length && calledUsers.length && !callConnected) { // 接听别人的通话
+    if (!selectedUsers.length && calledUsers.length && !callConnected &&!groupCall) { // 接听别人的通话
 			oSipSessionCall.accept(oConfigCall)
 			let obj = {}
 			obj[calledUsers[0].usr_number] = calledUsers[0]
@@ -407,8 +408,8 @@ export default class extends Component {
 			return
     }
 
-		if (this.state.callConnected && oSipSessionCall) { //申请通话权限
-			oSipSessionCall.info(`action=req\r\nid=${this.state.sessionId}\r\nlevel=1`,
+		if (callConnected && oSipSessionCall) { //申请通话权限
+			oSipSessionCall.info(`action=req\r\nid=${sessionId}\r\nlevel=1`,
 				'application/poc_msg',
 				this.state.oConfigCall
 			)
@@ -417,13 +418,12 @@ export default class extends Component {
 
     // 创建通话
 		if (oSipStack && !oSipSessionCall) {
-      this.saveRecords()
+      this.saveRecords(params && params.group_uuid ? params : '')
 			oSipSessionCall = oSipStack.newSession('call-audio', oConfigCall)
 			this.setState({sessionId: oSipSessionCall.o_session.i_id, calling: true})
 
-			let roomId = params ? params.group_hostextension : this.randomRoom()
+			let roomId = this.state.groupCall ? params.group_hostextension : this.randomRoom()
 			let config = {...oConfigCall}
-			// console.log(this.state.sessionId, config, '会话id')
 			let tempGroup = oSipSessionCall.call(roomId, {
 				...config,
 				members: selectedUsers.map(item=> item.usr_number).join('#')
@@ -433,7 +433,7 @@ export default class extends Component {
 				this.setState({calling: false, sessionId: null, groupCall: false})
         this.mMessage('error','呼叫失败')
 			} else {
-        this.setState({calledUsers: [...selectedUsers]})
+        !groupCall && this.setState({calledUsers: [...selectedUsers]})
       }
 		} else if (oSipSessionCall) {
 			// oSipSessionCall.accept(this.state.oConfigCall)
@@ -484,17 +484,20 @@ export default class extends Component {
     this.setState({modalVisible: true})
   }
 
-  saveRecords () {
+  saveRecords (data) {
     const {usernumber, myself} = this.props.account
 		const {selectedUsers} = this.props
 		const {calledUsers} = this.state
 
     let records = Storage.localGet(`${usernumber}records`) || [],name,
-		    callType = calledUsers.length && !selectedUsers.length ? 1 : 0
-    if (!callType) {
+		    callType = data ? 2 : calledUsers.length && !selectedUsers.length ? 1 : 0
+    
+    if (callType === 2) {
+      name = `${data.group_name}(群组)`
+    }else if (!callType) {
       name = selectedUsers.map(item => item.usr_name)
       name = name.length ? name.join(',') : ''
-    } else {
+    } else if (callType === 1) {
       name = calledUsers[0].usr_number
     }
 
@@ -502,6 +505,7 @@ export default class extends Component {
       name,
       time: new Date().getTime(),
       type: callType,
+      groupData: callType === 2 ? JSON.stringify(data) : '',
       users: this.props.selectedUsers.length ? this.props.selectedUsers : this.state.calledUsers
     }))
 
@@ -700,7 +704,7 @@ export default class extends Component {
 		const {selectedUsers=[]} = this.props
     const {sessionId, groupCall, talkingUser, calledUsers, connectedMemberObj, userCardSty, halfCall, callConnected} = this.state
     const users = calledUsers.length ? calledUsers : selectedUsers || []
-    // const users = selectedUsers
+    
 		let sty = this.getUserCardStyleByNum(users.length)
 
 		return (
@@ -710,8 +714,9 @@ export default class extends Component {
 									key={user.usr_number + new Date().getTime()}
 									className={`${styles['selected-user-item']} ${styles[sty]} ${styles[userCardSty]} ${baseStyles['m-box-border']}`}>
 									<div
+                    title={user.usr_name}
                     className={`${styles['avatar-wrap']}`}
-                    style={{backgroundColor:  `${user.usr_type === 'dispatch' ? '#4e86c7' : '#87d068'}`}}
+                    style={{backgroundColor:  `${user.usr_type === 'dispatch' ? '#4e86c7' : user.usr_type === 'poc_term' ? '#17c6bf' :'#87d068'}`}}
                   >
 										<div className={`${styles['top-info']} ${baseStyles['flex']} ${baseStyles['align-center']}`}>
 
@@ -738,7 +743,7 @@ export default class extends Component {
                         style={{height: '100%'}}
                       >
                           <i
-                            className={`${iconfont['m-icon']} ${iconfont[user.usr_type === 'dispatch' ? 'icon-diannao' : 'icon-chengyuan']}`}
+                            className={`${iconfont['m-icon']} ${iconfont[user.usr_type === 'dispatch' ? 'icon-diannao' : user.usr_type === 'poc_term' ? 'icon-duijiangji' : 'icon-chengyuan']}`}
                             style={{fontSize: `${user.usr_type === 'dispatch' ? 40 : 53}px`}}
                           ></i>
                       </div>
@@ -774,7 +779,7 @@ export default class extends Component {
 
   createHandlers = () => {
     const {selectedUsers} = this.props
-    const { callConnected, calling, ptting, calledUsers, halfCall } = this.state
+    const { callConnected, calling, ptting, calledUsers, halfCall, groupCall } = this.state
     return (<div className={`${styles.handlers} ${baseStyles['flex']} ${baseStyles['justify-center']} ${baseStyles['align-center']}`}>
      <div className={`${styles['handler-item']}`}
           onClick={this.hangUp}
@@ -802,7 +807,7 @@ export default class extends Component {
           <div className={`${styles['handler-item']}`}>
             <div id="create"
                  className={`${styles['create']} ${styles['handler-center']} ${styles['handler-item-circle']} ${baseStyles['pr']}`}
-                 style={{backgroundColor: `${calledUsers.length && !selectedUsers.length ? '#87d068' : '#3e79f2'}`}}
+                 style={{backgroundColor: `${calledUsers.length && !selectedUsers.length && !groupCall ? '#87d068' : '#3e79f2'}`}}
                  onClick={this.sipCall}
             >
               <i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft60']}`}></i>
@@ -827,7 +832,7 @@ export default class extends Component {
 
 	render () {
     const { height, selectedUsers, account } = this.props;
-		const { callConnected, calling, talkingUser, duration, modalVisible, inpVal, calledUsers, halfCall} = this.state
+		const { callConnected, groupCall, talkingUser, duration, modalVisible, inpVal, calledUsers, halfCall} = this.state
 
 		return (
 			<div className={`m-call-wrap ${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
@@ -852,7 +857,7 @@ export default class extends Component {
 							{duration ? this.formatDuration() : ''}
 						</div>
 						<div className={`${baseStyles['flex']} ${baseStyles['align-center']} ${baseStyles['justify-center']} ${styles['center-info']}`}>
-							{talkingUser ? `${talkingUser.usr_name}正在说话...` : callConnected ? '通话已连接' : calledUsers.length && !selectedUsers.length ? calledUsers[0].usr_name+'正在邀请你通话...' : ''}
+							{talkingUser ? `${talkingUser.usr_name}正在说话...` : callConnected ? '通话已连接' : calledUsers.length && !selectedUsers.length && !groupCall ? calledUsers[0].usr_name+'正在邀请你通话...' : ''}
 						</div>
 					</div>
 					{ selectedUsers.length || calledUsers.length ? this.createHandlers() : this.tipsDom()}

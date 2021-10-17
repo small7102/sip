@@ -3,7 +3,7 @@ import baseStyles from '../assets/base.less'
 import iconfont from '../assets/iconfont.less'
 import styles from '../Users/Users.less'
 import {getGroups} from '../services'
-import { Tree, Avatar } from 'antd';
+import { Tree, Avatar,Spin } from 'antd';
 import Search from '../Search';
 const { TreeNode } = Tree;
 
@@ -11,18 +11,18 @@ export default
 class Groups extends Component {
   constructor (props) {
     super(props)
-    this.handleMore = this.handleMore.bind(this)
   }
 
   state = {
     groupList: [],
     expandedKeys: [],
-    selectedUserIds: []
+    selectedUserIds: [],
+    loading: false
   }
 
   getGroups (roomid='') {
     const {usernumber, pwd, realm, dataUrl} = this.props
-    
+    this.setState({loading: true})
     getGroups({
       usernumber: `${usernumber}@${realm}`,
       pwd,
@@ -31,11 +31,12 @@ class Groups extends Component {
     }).then(res => {
       if (res && res.code === '1') {
         let list = res.value
-        this.setState({groupList: list}, () => {
+        this.setState({groupList: list, loading: false}, () => {
           if (list.length) this.setState({expandedKeys: [list[list.length-1].group_uuid]})
         })
       }
     }).catch(err => {
+      this.setState({loading: false})
     })
   }
 
@@ -52,10 +53,6 @@ class Groups extends Component {
     })
 
     return _users
-  }
-
-  handleMore () {
-
   }
 
   onCheck = (data, isSearch = false) => {
@@ -131,6 +128,13 @@ class Groups extends Component {
       onlineIds.includes(item.usr_mapnum) ? item.usr_mapnum === usernumber ? onlineUsers.unshift(item) : onlineUsers.push(item) : offlineUsers.push(item)
     })
 
+    onlineUsers = onlineUsers.sort((prev, next) => {
+      return parseInt(prev.usr_mapnum) - parseInt(next.usr_mapnum) 
+    })
+    offlineUsers = offlineUsers.sort((prev, next) => {
+      return parseInt(prev.usr_mapnum) - parseInt(next.usr_mapnum) 
+    })
+
     return onlineUsers.concat(offlineUsers)
   }
 
@@ -145,8 +149,9 @@ class Groups extends Component {
 
   onSelect = (e) => {
     let {selectedUserIds} = this.state
+    console.log(e,1233)
     if (e && e.length === 1) {
-			if (e[0].includes('+')) {
+			if (!e[0].includes('+')) {
 				this.setState({
 					expandedKeys: e
 				})
@@ -155,6 +160,7 @@ class Groups extends Component {
 				this.setState({
 					selectedUserIds
 				})
+        this.onCheck(selectedUserIds)
 			}
 		}
   }
@@ -202,18 +208,18 @@ class Groups extends Component {
               className={`${onlineIds.includes(item.usr_mapnum) ? styles['online'] : styles['offline']} ${baseStyles['flex']} ${baseStyles['align-center']}`}
             >
                 <Avatar
-                  style={{marginTop: '-2px', marginRight: '8px', backgroundColor:  `${item.usr_type === 'dispatch' ? '#4e86c7' : '#87d068'}`}}
+                  style={{marginTop: '-2px', marginRight: '8px', backgroundColor:  `${item.usr_type === 'dispatch' ? '#4e86c7' : item.usr_type === 'poc_term' ? '#17c6bf' :'#87d068'}`}}
                   shape="square"
                   size={32}
                 >
                   <i
-                    className={`${iconfont['m-icon']} ${iconfont[item.usr_type === 'dispatch' ? 'icon-diannao' : 'icon-chengyuan']}`}
-                    style={{fontSize: `${item.usr_type === 'dispatch' ? 18 : 22}px`}}
+                    className={`${iconfont['m-icon']} ${iconfont[item.usr_type === 'dispatch' ? 'icon-diannao' : item.usr_type === 'poc_term' ? 'icon-duijiangji' : 'icon-chengyuan']}`}
+                    style={{fontSize: `${item.usr_type === 'dispatch' ? '18px' : item.usr_type === 'poc_term' ? '26px' : '22px'}`}}
                   ></i>
                 </Avatar>
               <div
                 className={`${styles['item-name']} ${baseStyles['text-overflow']} ${baseStyles['flex-item']}`}
-                style={{width: `${105}px`}}
+                style={{width: `${130}px`}}
               >
                 <div className={`${baseStyles['text-overflow']}`} title={item.usr_name}>
                   {item.usr_name} {item.usr_mapnum === usernumber ? '(自己)' : ''}
@@ -224,15 +230,6 @@ class Groups extends Component {
               <span className={`${baseStyles.ft12} ${styles['state']}`}>
                 {onlineIds.includes(item.usr_mapnum) ? '在线' : '离线'}
               </span>
-              <i
-                className={`${iconfont['icon-gengduo']} ${iconfont['m-icon']} ${styles['more-btn']}`}
-                onClick={(e)=> {
-                  e.persist()
-                  e.stopPropagation()
-                  this.handleMore(e, item)
-                }}
-              >
-                </i>
             </div>
           </div>
         }
@@ -247,7 +244,7 @@ class Groups extends Component {
   }
 
   render () {
-    const {expandedKeys, groupList, selectedUserIds} = this.state
+    const {expandedKeys, loading, groupList, selectedUserIds} = this.state
     const {height, width, usernumber} = this.props
     return(
       <div className={baseStyles['scroll-bar']}>
@@ -262,17 +259,25 @@ class Groups extends Component {
           className={`${styles['list-wrap']} ${baseStyles['scroll-bar']} ${baseStyles['mt10']}`}
           id="groupRef"
         >
-            <Tree
-              checkable
-              className={styles.tree}
-              onCheck={this.onCheck}
-              onExpand={this.onExpand}
-              onSelect={this.onSelect}
-              checkedKeys={selectedUserIds}
-              expandedKeys={expandedKeys}
-            >
-              {this.renderTreeNodes(groupList)}
-            </Tree>
+        {loading ? (
+          <div
+            className={`${baseStyles['w100']} ${baseStyles.flex} ${baseStyles['align-center']}  ${baseStyles['justify-center']}`}
+            style={{height: `${height-200}px`}}
+          >
+            <Spin />
+          </div>
+        ) :
+          <Tree
+            checkable
+            className={styles.tree}
+            onCheck={this.onCheck}
+            onExpand={this.onExpand}
+            onSelect={this.onSelect}
+            checkedKeys={selectedUserIds}
+            expandedKeys={expandedKeys}
+          >
+            {this.renderTreeNodes(groupList)}
+          </Tree>}
         </div>
       </div>
     )
