@@ -35,7 +35,7 @@ class VoiceRecords extends Component {
     playing: false,
     end_stamp: new Date(),
     caller_id_number: '',
-    start_stamp: '',
+    start_stamp: new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
     loading: false,
     offset: 1,
   }
@@ -57,7 +57,7 @@ class VoiceRecords extends Component {
       total: 0,
       destination_number: '',
       caller_id_number: '',
-      start_stamp: '',
+      start_stamp: new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
       currentUrl: '',
       currentId: '',
       currentIndex: 0,
@@ -285,6 +285,7 @@ class VoiceRecords extends Component {
 	render () {
 		const {visible, height} = this.props
     const {loading, destination_number, caller_id_number,total, currentUrl, list, end_stamp, start_stamp} = this.state
+    console.log(this.props.form,999)
 
 		return (
 			<Drawer

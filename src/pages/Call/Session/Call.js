@@ -246,18 +246,18 @@ export default class extends Component {
               obj[cbInfo.number] = cbInfo
 							// 有人加进会话
               this.mMessage('info',`${infoUser.usr_name}接入会话`)
-              
+
               if (!callConnected) {
                 this.waitingTimeCount()
                 this.countTime()
               }
-              
+
 							this.setState({
                 callConnected: true,
 								calling: false,
 								connectedMemberObj: obj,
 							})
-              
+
 						} else if (state == 'talking') {
               obj[cbInfo.number] = cbInfo
               this.setState({
@@ -368,7 +368,7 @@ export default class extends Component {
       this.sipCall(data)
     })
 
-    
+
   }
 
 	randomRoom () {
@@ -459,6 +459,7 @@ export default class extends Component {
 				}
 			})
 		} else {
+      this.setState({calledUsers: []})
 			this.removeSelectedUser()
 		}
   }
@@ -491,7 +492,7 @@ export default class extends Component {
 
     let records = Storage.localGet(`${usernumber}records`) || [],name,
 		    callType = data ? 2 : calledUsers.length && !selectedUsers.length ? 1 : 0
-    
+
     if (callType === 2) {
       name = `${data.group_name}(群组)`
     }else if (!callType) {
@@ -704,7 +705,7 @@ export default class extends Component {
 		const {selectedUsers=[]} = this.props
     const {sessionId, groupCall, talkingUser, calledUsers, connectedMemberObj, userCardSty, halfCall, callConnected} = this.state
     const users = calledUsers.length ? calledUsers : selectedUsers || []
-    
+
 		let sty = this.getUserCardStyleByNum(users.length)
 
 		return (
