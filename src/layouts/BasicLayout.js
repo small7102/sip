@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout } from 'antd';
+import { Layout, Button } from 'antd';
 import DocumentTitle from 'react-document-title';
 import isEqual from 'lodash/isEqual';
 import memoizeOne from 'memoize-one';
@@ -16,6 +16,7 @@ import logo from '../assets/logo.svg';
 import Footer from './Footer';
 import Header from './Header';
 import Context from './MenuContext';
+import Call from '../components/Call/Main/Main'
 
 const { Content } = Layout;
 const { check } = Authorized;
@@ -82,6 +83,7 @@ class BasicLayout extends React.PureComponent {
   state = {
     rendering: true,
     isMobile: false,
+    visible: false,
   };
 
   componentDidMount() {
@@ -215,6 +217,12 @@ class BasicLayout extends React.PureComponent {
     });
   };
 
+  toggleVisible = () => {
+    this.setState({
+      visible: !this.state.visible
+    })
+  }
+
   render() {
     const {
       navTheme,
@@ -251,7 +259,17 @@ class BasicLayout extends React.PureComponent {
             isMobile={isMobile}
             {...this.props}
           />
-          <Content style={this.getContentStyle()}>{children}</Content>
+          <Content style={this.getContentStyle()}>
+            <Button type="primary" onClick={this.toggleVisible}>语音通话</Button>
+            <Call
+              usernumber='10010129'
+              pwd='021832'
+              realm= 'kinet'
+		          socket_url = 'wss://183.47.46.242:7443/'
+              data_url='http://183.47.46.242:8008'
+              visible={this.state.visible}
+            />
+          </Content>
           <Footer />
         </Layout>
       </Layout>

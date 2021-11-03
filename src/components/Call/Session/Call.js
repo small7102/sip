@@ -2,17 +2,12 @@ import React, { Component } from 'react';
 import iconfont from '../assets/iconfont.less'
 import styles from './Call.less';
 import baseStyles from '../assets/base.less'
-import { message, Icon, Modal, Button, Input, Form } from 'antd';
+import { message, Icon, Modal, Button, Input, notification } from 'antd';
 const ringbacktoneSrc = require('../assets/sounds/ringbacktone.wav')
 const ringtoneSrc = require('../assets/sounds/ringtone.wav')
 import {byteToString, arrToObjectBySmyble, sendsFormat} from '../utils'
 import Storage from '../utils/localStore'
 import Settings from '../Settings'
-
-let oSipStack = null
-let oSipSessionRegister = null
-let oSipSessionCall = null
-let oSipSessionMessage = null
 let timer = null
 let waitingTimer = null
 
@@ -149,7 +144,7 @@ export default class extends Component {
               if (user) {
                 this.setState({calledUsers: [user], halfCall: e.call_info ? true : false})
                 this.ringbackTone()
-                this.handleAutoAnswer()
+                this.handleAutoAnswer(user)
               }
             }
 					}
@@ -326,13 +321,30 @@ export default class extends Component {
 		}
 	}
 
-  handleAutoAnswer () {
+  handleAutoAnswer (user) {
     if (this.state.autoAnswer) {
       this.sipCall()
     } else {
-			this.setState({calling: true})
+      typeof this.props.callingFn === 'function' && this.props.callingFn()
+
+      if (this.props.visible) {
+        this.openNotice(user)
+      }
+      this.setState({calling: true})
 		}
   }
+
+
+
+  openNotice = user => {
+    notification.info({
+      message: `${user ? user.usr_name : ''}邀请你通话...`,
+      duration: null,
+      top: 60,
+      className: styles['call-notice'],
+      description: this.callComeDom()
+    });
+  };
 
   waitingTimeCount () {
     let waiting = 0
@@ -579,6 +591,8 @@ export default class extends Component {
       duration: 3,
     });
 		this.getLocalSettings()
+
+    this.openNotice()
 	}
 
   getLocalSettings () {
@@ -777,6 +791,19 @@ export default class extends Component {
     )
   }
 
+  callComeDom = () => {
+    return (
+      <div className={`${baseStyles.flex} ${baseStyles['align-center']}`}>
+        <Button shape="circle" type="danger" size="large" style={{marginLeft: 'auto'}}>
+            <i className={`${iconfont['m-icon']} ${iconfont['icon-guaduan']} ${baseStyles['ft30']}`}></i>
+        </Button>
+        <Button shape="circle" type="primary" size="large" style={{marginLeft: 10}}>
+          <i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft30']}`}></i>
+        </Button>
+      </div>
+    )
+  }
+
 
   createHandlers = () => {
     const {selectedUsers} = this.props
@@ -832,10 +859,10 @@ export default class extends Component {
  )};
 
 	render () {
-    const { height, selectedUsers, account, visible } = this.props;
+    const { height, selectedUsers, account } = this.props;
 		const { callConnected, groupCall, talkingUser, duration, modalVisible, inpVal, calledUsers, halfCall} = this.state
 
-		return !visble ? '' : (
+		return (
 			<div className={`m-call-wrap ${baseStyles['m-box-border']} ${baseStyles['flex-item']} ${styles['call-wrap']}`}
 					style={{height: `${height}px`, zIndex: 3}}
 					>

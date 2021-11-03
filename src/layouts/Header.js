@@ -115,16 +115,19 @@ class HeaderView extends PureComponent {
         className={fixedHeader ? styles.fixedHeader : ''}
       >
         {isTop && !isMobile ? (
-          <TopNavHeader
-            theme={navTheme}
-            mode="horizontal"
-            Authorized={Authorized}
-            onCollapse={handleMenuCollapse}
-            onNoticeClear={this.handleNoticeClear}
-            onMenuClick={this.handleMenuClick}
-            onNoticeVisibleChange={this.handleNoticeVisibleChange}
-            {...this.props}
-          />
+          <div>
+            <TopNavHeader
+              theme={navTheme}
+              mode="horizontal"
+              Authorized={Authorized}
+              onCollapse={handleMenuCollapse}
+              onNoticeClear={this.handleNoticeClear}
+              onMenuClick={this.handleMenuClick}
+              onNoticeVisibleChange={this.handleNoticeVisibleChange}
+              {...this.props}
+            />
+          </div>
+
         ) : (
           <GlobalHeader
             onCollapse={handleMenuCollapse}
