@@ -227,9 +227,9 @@ export default class extends Component {
 						let cbInfo = arrToObjectBySmyble(infoArr)
 						let {action, status, state, result, count, number} = cbInfo
             let users = selectedUsers.length ? selectedUsers : this.props.users
-            console.log(cbInfo, 12345)
             if (state) {
               infoUser = users.find(item => item.usr_number === cbInfo.number)
+							console.log(infoUser)
               if (!selectedUsers) {
 								let _calledUsers = [...calledUsers]
                 _calledUsers.push(infoUser)
@@ -322,27 +322,35 @@ export default class extends Component {
 	}
 
   handleAutoAnswer (user) {
+		console.log(this.state.autoAnswer, '自动接听？？？')
     if (this.state.autoAnswer) {
+			!this.props.visible && typeof this.props.onAnswer === 'function' && this.props.onAnswer()
       this.sipCall()
     } else {
       typeof this.props.callingFn === 'function' && this.props.callingFn()
 
-      if (this.props.visible) {
+      if (!this.props.visible) {
         this.openNotice(user)
-      }
-      this.setState({calling: true})
+      } else {
+				this.setState({calling: true})
+			}
 		}
   }
 
 
 
   openNotice = user => {
+		let key = user && user.usr_number || '1111'
     notification.info({
+			key,
       message: `${user ? user.usr_name : ''}邀请你通话...`,
       duration: null,
       top: 60,
       className: styles['call-notice'],
-      description: this.callComeDom()
+      description: this.callComeDom(key),
+			onClose: () => {
+				this.hangUp()
+			}
     });
   };
 
@@ -394,7 +402,7 @@ export default class extends Component {
 
 	// 开始拨号
 	sipCall (params) {
-    const {netNormal, calledUsers, groupCall, oConfigCall, sessionId, calling, callConnected, sipAvalible} = this.state
+    const {netNormal, calledUsers, groupCall, oConfigCall, sessionId, calling, callConnected} = this.state
     const {selectedUsers, account} = this.props
 		if(!netNormal){
       this.mMessage('error', 'scoket连接失败')
@@ -404,22 +412,22 @@ export default class extends Component {
       this.mMessage('error', 'scoket连接失败')
       return
     }
-		if(calling){
-      this.mMessage('warning', '已有通话在进行...')
-      return
-    }
-
+		
     // 接听别人的通话
     if (!selectedUsers.length && calledUsers.length && !callConnected &&!groupCall) { // 接听别人的通话
 			oSipSessionCall.accept(oConfigCall)
 			let obj = {}
 			obj[calledUsers[0].usr_number] = calledUsers[0]
 			this.setState({connectedMemberObj: obj, calling: false})
-
+			
       this.saveRecords()
 			return
     }
-
+		
+		if(calling){
+			this.mMessage('warning', '已有通话在进行...')
+			return
+		}
 		if (callConnected && oSipSessionCall) { //申请通话权限
 			oSipSessionCall.info(`action=req\r\nid=${sessionId}\r\nlevel=1`,
 				'application/poc_msg',
@@ -440,6 +448,7 @@ export default class extends Component {
 				...config,
 				members: selectedUsers.map(item=> item.usr_number).join('#')
 			})
+
 			if (tempGroup !=0) {
 				oSipSessionCall = null
 				this.setState({calling: false, sessionId: null, groupCall: false})
@@ -475,6 +484,17 @@ export default class extends Component {
 			this.removeSelectedUser()
 		}
   }
+
+	onAnswer = (key) => {
+		typeof this.props.onAnswer === 'function' && this.props.onAnswer()
+		notification.close(key)
+		this.sipCall()
+	}
+
+	onReject = (key) => {
+		notification.close(key)
+		this.hangUp()
+	}
 
   removeSelectedUser (id) {
     this.props.removeSelectedUser(id)
@@ -591,8 +611,6 @@ export default class extends Component {
       duration: 3,
     });
 		this.getLocalSettings()
-
-    this.openNotice()
 	}
 
   getLocalSettings () {
@@ -791,13 +809,13 @@ export default class extends Component {
     )
   }
 
-  callComeDom = () => {
+  callComeDom = (key) => {
     return (
       <div className={`${baseStyles.flex} ${baseStyles['align-center']}`}>
-        <Button shape="circle" type="danger" size="large" style={{marginLeft: 'auto'}}>
+        <Button shape="circle" type="danger" size="large" style={{marginLeft: 'auto'}} onClick={()=>{this.onReject(key)}}>
             <i className={`${iconfont['m-icon']} ${iconfont['icon-guaduan']} ${baseStyles['ft30']}`}></i>
         </Button>
-        <Button shape="circle" type="primary" size="large" style={{marginLeft: 10}}>
+        <Button shape="circle" type="primary" size="large" style={{marginLeft: 10}} onClick={()=>{this.onAnswer(key)}}>
           <i className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft30']}`}></i>
         </Button>
       </div>

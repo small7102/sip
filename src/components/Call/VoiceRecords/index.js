@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import styles from './index.less';
 import baseStyles from '../assets/base.less'
 import iconfont from '../assets/iconfont.less'
-import { Drawer, Form, Select, Popover,DatePicker, Button, Pagination, Icon, Spin } from 'antd';
+import { Drawer, Form, Select, Popover,DatePicker, Input,Button, Pagination, Icon, Spin } from 'antd';
 const { Option } = Select;
 import moment from 'moment';
 import { connect } from 'dva';
@@ -33,16 +33,20 @@ class VoiceRecords extends Component {
     currentId: '',
     currentIndex: 0,
     playing: false,
-    end_stamp: new Date(),
+    end_stamp: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
     caller_id_number: '',
-    start_stamp: new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
+    start_stamp: moment(new Date(new Date().getTime() - 24 * 60 * 60 * 1000), 'YYYY-MM-DD HH:mm:ss'),
     loading: false,
     offset: 1,
+    fields: {
+      username: {
+        value: 'benjycui',
+      },
+    },
   }
 
   initData (usr_number) {
     this.setState({
-      destination_number: usr_number,
       caller_id_number: usr_number,
       end_stamp: new Date()
     })
@@ -57,12 +61,12 @@ class VoiceRecords extends Component {
       total: 0,
       destination_number: '',
       caller_id_number: '',
-      start_stamp: new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
+      start_stamp: moment(new Date(new Date().getTime() - 24 * 60 * 60 * 1000), 'YYYY-MM-DD HH:mm:ss'),
       currentUrl: '',
       currentId: '',
       currentIndex: 0,
       playing: false,
-      end_stamp: new Date(),
+      end_stamp: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
     })
 	}
 
@@ -202,16 +206,28 @@ class VoiceRecords extends Component {
       start_stamp: e ? moment(e, 'YYYY-MM-DD HH:mm:ss') : null
     })
   }
+  
+  comfirmDate = () => {
+    const {end_stamp, start_stamp} = this.state
+    if (end_stamp.valueOf()<start_stamp.valueOf()) {
+      this.setState({
+        end_stamp: start_stamp,
+        start_stamp: end_stamp
+      })
+    }
+  }
 
   onCallerChange = (e) => {
     this.setState({
-      caller_id_number: e
+      caller_id_number: e,
+      destination_number: this.state.destination_number === e ? '' : this.state.destination_number
     })
   }
-
+  
   onDestinationChange = (e) => {
     this.setState({
-      destination_number: e
+      destination_number: e,
+      caller_id_number: this.state.caller_id_number === e ? '' : this.state.caller_id_number
     })
   }
 
@@ -284,7 +300,7 @@ class VoiceRecords extends Component {
 
 	render () {
 		const {visible, height} = this.props
-    const {loading, destination_number, caller_id_number,total, currentUrl, list, end_stamp, start_stamp} = this.state
+    const {loading, fields,destination_number, caller_id_number,total, currentUrl, list, end_stamp, start_stamp} = this.state
 
 		return (
 			<Drawer
@@ -331,24 +347,28 @@ class VoiceRecords extends Component {
 					<Form.Item label="开始时间" wrapperCol={{ span: 16, offset: 1 }}>
 					<DatePicker
             showTime
-            allowClear
 						className={styles['date-wrap']}
             dropdownClassName={styles['drop-date-wrap']}
 						style={{ width: 220 }}
 						format="YYYY-MM-DD HH:mm:ss"
-						disabledDate={this.disabledDate}
-            value={start_stamp ? moment(start_stamp, 'YYYY-MM-DD HH:mm:ss') : null}
+            disabledDate={this.disabledDate}
+            value={moment(start_stamp, 'YYYY-MM-DD HH:mm:ss')}
+            onPanelChange={
+              (e)=> {
+                this.onStartDateChange(e)
+              }
+            }
 						onChange={
               (e) => {
                 this.onStartDateChange(e)
               }
             }
+            onOk={this.comfirmDate}
 					/>
 					</Form.Item>
 					<Form.Item label="结束时间"  wrapperCol={{ span: 16, offset: 1 }}>
 					<DatePicker
             showTime
-            allowClear
 						className={styles['date-wrap']}
             dropdownClassName={styles['drop-date-wrap']}
 						style={{ width: 220 }}
@@ -360,9 +380,14 @@ class VoiceRecords extends Component {
                 this.onEndDateChange(e)
               }
             }
+            onPanelChange={
+              (e)=> {
+                this.onEndDateChange(e)
+              }
+            }
+            onOk={this.comfirmDate}
 					/>
 					</Form.Item>
-
 					<div className={`${baseStyles['flex']} ${baseStyles['mt10']}`}
               style={{paddingBottom: '10px', borderBottom: '1px solid rgba(255, 255, 255, .2)'}}
           >
@@ -370,8 +395,8 @@ class VoiceRecords extends Component {
                 style={{marginLeft: 'auto', backgroundColor: 'rgba(255,255,255,.3)', borderColor: 'rgba(255,255,255,.4)', fontSize: '13px'}}
                 onClick={this.handleClear}
               >
-                  清除
-                </Button>
+                清除
+              </Button>
 							<Button
 								type="primary"
                 loading={loading}
@@ -381,14 +406,13 @@ class VoiceRecords extends Component {
 					</div>
           {list.length?
             <Pagination
-                size="small"
-                className={`${baseStyles['mt10']} ${styles['pagination-wrap']}`}
-                total={total}
-                showTotal={this.showTotal}
-                onChange={this.pageNoChange}
+            size="small"
+            className={`${baseStyles['mt10']} ${styles['pagination-wrap']}`}
+            total={total}
+            showTotal={this.showTotal}
+            onChange={this.pageNoChange}
             /> : ''}
 				</Form>
-
         <div
           className={`${baseStyles['scroll-bar']} ${baseStyles['mt10']}`}
           style={{height: `${height-240}px`}}

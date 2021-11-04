@@ -83,7 +83,7 @@ class BasicLayout extends React.PureComponent {
   state = {
     rendering: true,
     isMobile: false,
-    visible: false,
+    callRef: null
   };
 
   componentDidMount() {
@@ -218,8 +218,16 @@ class BasicLayout extends React.PureComponent {
   };
 
   toggleVisible = () => {
+    if (this.state.callRef) {
+      this.state.callRef.setState({
+        visible: !this.state.callRef.state.visible
+      })
+    }
+  }
+
+  onCallRef = (ref) => {
     this.setState({
-      visible: !this.state.visible
+      callRef: ref
     })
   }
 
@@ -262,12 +270,12 @@ class BasicLayout extends React.PureComponent {
           <Content style={this.getContentStyle()}>
             <Button type="primary" onClick={this.toggleVisible}>语音通话</Button>
             <Call
-              usernumber='10010129'
-              pwd='021832'
+              usernumber='10010022'
+              pwd='228304'
               realm= 'kinet'
 		          socket_url = 'wss://183.47.46.242:7443/'
               data_url='http://183.47.46.242:8008'
-              visible={this.state.visible}
+              onRef={this.onCallRef}
             />
           </Content>
           <Footer />

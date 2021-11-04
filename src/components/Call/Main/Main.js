@@ -5,6 +5,7 @@ import Users from '../Users/Users'
 import Call from '../Session/Call'
 import History from '../History/History'
 import Tempgroups from '../Tempgroups/tempgroups';
+import {Icon} from 'antd';
 import {queryOnlineUsers, queryData} from './Apis/sipUsers'
 const QUERY_ONLINE_DURATION = 12000
 let loadedAsset = false
@@ -43,7 +44,8 @@ class SipCall extends Component {
     flatParentIdMap: {},
     departmentsMap: {},
     usersMap: {},
-    loading: false
+    loading: false,
+    visible: false,
 	}
 
 	loadSipAssets() {
@@ -145,6 +147,10 @@ class SipCall extends Component {
     this.setState({recordsRef: ref})
   }
 
+  onAnswer = () => {
+    this.setState({visible: true})
+  }
+
   callByOne = (user) => {
     const {callRef} = this.state
 		this.setState({
@@ -167,8 +173,10 @@ class SipCall extends Component {
     }
 	}
 
-  callingFn () {
-    
+  hanleClose = () => {
+    this.setState({
+      visible: false
+    })
   }
 
 	handleFresh = () => {
@@ -237,70 +245,82 @@ class SipCall extends Component {
       }
 
     }, 1000)
+
+    typeof this.props.onRef === 'function' && this.props.onRef(this)
 	}
 
 	render () {
-    const {usernumber, pwd, socket_url, realm, data_url, visible} = this.props
-		let {height, width, loading, selectedUsers, hasPoCDevice, onlineUserIds, usersMap, originDepartments, departments, parentIdMap, flatParentIdMap, departmentsMap} = this.state
+    const {usernumber, pwd, socket_url, realm, data_url} = this.props
+		let {visible, height, width, loading, selectedUsers, hasPoCDevice, onlineUserIds, usersMap, originDepartments, departments, parentIdMap, flatParentIdMap, departmentsMap} = this.state
     return(
-			<div
-				className={`${styles.sipcall} ${baseStyles['flex']}`}
-				style={{height: `${visible ? (height-68) : 0}px`, width: `${visible ? width < 1200 ? 1280 : width : 0}px`, padding: `${visible ? 24 : 0}px`, overflow: 'hidden'}}
-			>
-				{visible && <Users ref="users"
-               height={height-112}
-							 width={width > 1500 ? 400 : 300}
-							 users={this.usersOfUpMyself()}
-               usersMap= {usersMap}
-							 departments={departments}
-							 originDepartments={originDepartments}
-							 parentIdMap={parentIdMap}
-							 departmentsMap={departmentsMap}
-							 flatParentIdMap={flatParentIdMap}
-							 loading={loading}
-							 onlineIds={onlineUserIds}
-							 getSelectedUserIds={this.getSelectedUsers}
-               onRef={this.onRef}
-							 usernumber={usernumber}
-               realm={realm}
-							 pwd={pwd}
-               dataUrl={data_url}
-               callByOne={this.callByOne}
-               handleFresh={this.handleFresh}
-               handleGroupCall={this.handleGroupCall}
-               callingFn={this.callingFn}
-				/>}
-				<Call
-          height={height-112}
-          visible={visible}
-          selectedUsers={selectedUsers}
-          hasPoCDevice={hasPoCDevice}
-          users={this.usersOfUpMyself()}
-          removeSelectedUser={this.removeSelectedUser}
-          saveTempgroup={this.saveTempgroup}
-          saveRecords={this.saveRecords}
-          account={{usernumber, pwd, socket_url, myself: this.usersOfUpMyself()[0]}}
-          onRef={this.onCallRef}
-				/>
-				{visible && (<div
-					className={`${styles['right-wrap']}`}
-				>
-					<History
-            height={height - 332}
-            width={width > 1500 ? 400 : 300}
-            onRecordsRef={this.onRecordsRef}
-            usernumber={usernumber}
-            tempCallByRecords={this.tempCallByRecords}
+      <div 
+        className={`${styles['m-call-wrap']}`}
+        style={{ width, height: visible ? (height-64) : 0, bottom: visible ? 0 : (64-height)}}>
+        <Icon 
+          type="close" 
+          style={{fontSize: 18,position: 'absolute', right: 10, top: 5}}
+          className={`${baseStyles.pointer}`}
+          onClick={this.hanleClose}
+        />
+        <div
+          className={`${styles.sipcall} ${baseStyles['flex']}`}
+          style={{height: `${visible ? (height-64) : 0}px`, width: `${visible ? width < 1200 ? 1280 : width : 0}px`, padding: `${visible ? '30px 20px' : 0}`, overflow: 'hidden'}}
+        >
+          {visible && <Users ref="users"
+                height={height-112}
+                width={width > 1500 ? 400 : 300}
+                users={this.usersOfUpMyself()}
+                usersMap= {usersMap}
+                departments={departments}
+                originDepartments={originDepartments}
+                parentIdMap={parentIdMap}
+                departmentsMap={departmentsMap}
+                flatParentIdMap={flatParentIdMap}
+                loading={loading}
+                onlineIds={onlineUserIds}
+                getSelectedUserIds={this.getSelectedUsers}
+                onRef={this.onRef}
+                usernumber={usernumber}
+                realm={realm}
+                pwd={pwd}
+                dataUrl={data_url}
+                callByOne={this.callByOne}
+                handleFresh={this.handleFresh}
+                handleGroupCall={this.handleGroupCall}
+          />}
+          <Call
+            height={height-112}
+            visible={visible}
+            selectedUsers={selectedUsers}
+            hasPoCDevice={hasPoCDevice}
+            users={this.usersOfUpMyself()}
+            removeSelectedUser={this.removeSelectedUser}
+            saveTempgroup={this.saveTempgroup}
+            saveRecords={this.saveRecords}
+            account={{usernumber, pwd, socket_url, myself: this.usersOfUpMyself()[0]}}
+            onRef={this.onCallRef}
+            onAnswer={this.onAnswer}
           />
-					<Tempgroups
-            height={200}
-            width={width > 1500 ? 400 : 300}
-            onTempGroupRef={this.onTempGroupRef}
-            usernumber={usernumber}
-						tempCallByRecords={this.tempCallByRecords}
-          />
-				</div>)}
-			</div>
+          {visible && (<div
+            className={`${styles['right-wrap']}`}
+          >
+            <History
+              height={height - 332}
+              width={width > 1500 ? 400 : 300}
+              onRecordsRef={this.onRecordsRef}
+              usernumber={usernumber}
+              tempCallByRecords={this.tempCallByRecords}
+            />
+            <Tempgroups
+              height={200}
+              width={width > 1500 ? 400 : 300}
+              onTempGroupRef={this.onTempGroupRef}
+              usernumber={usernumber}
+              tempCallByRecords={this.tempCallByRecords}
+            />
+          </div>)}
+        </div>
+      </div>
 		)
 	}
 }
