@@ -43,12 +43,13 @@ class VoiceRecords extends Component {
         value: 'benjycui',
       },
     },
+    originCaller: ''
   }
 
   initData (usr_number) {
     this.setState({
       caller_id_number: usr_number,
-      end_stamp: new Date()
+      originCaller: usr_number
     })
   }
 
@@ -67,6 +68,7 @@ class VoiceRecords extends Component {
       currentIndex: 0,
       playing: false,
       end_stamp: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+      originCaller: ''
     })
 	}
 
@@ -153,7 +155,7 @@ class VoiceRecords extends Component {
     const {playing, currentId,list} = this.state
     const {uuid, audio_url} = data
     if (!audio_url) {
-      index+1 === list.length ? this.handlePlay(list[0], 0) : this.handlePlay(list[index+1], index+1)
+      if (index+1<list.length) this.handlePlay(list[index+1], index+1)
       return
     }
 
@@ -239,12 +241,12 @@ class VoiceRecords extends Component {
     })
   }
 
-  handleClear = () => {
+  handleReset = () => {
     this.setState({
       destination_number:'',
-      caller_id_number: '',
-      start_stamp: '',
-      end_stamp: new Date(),
+      caller_id_number: this.state.originCaller,
+      start_stamp: moment(new Date(new Date().getTime() - 24 * 60 * 60 * 1000), 'YYYY-MM-DD HH:mm:ss'),
+      end_stamp: moment(new Date(),'YYYY-MM-DD HH:mm:ss'),
     })
   }
 
@@ -393,9 +395,9 @@ class VoiceRecords extends Component {
           >
 							<Button
                 style={{marginLeft: 'auto', backgroundColor: 'rgba(255,255,255,.3)', borderColor: 'rgba(255,255,255,.4)', fontSize: '13px'}}
-                onClick={this.handleClear}
+                onClick={this.handleReset}
               >
-                清除
+                重置
               </Button>
 							<Button
 								type="primary"

@@ -10,7 +10,7 @@ import Search from '../Search'
 
 const { TreeNode } = Tree;
 const { TabPane } = Tabs
-let scrollTop = 0
+let scrollTop = 0, isMounted=false
 export default
 class Users extends Component {
 	constructor (props) {
@@ -232,11 +232,18 @@ class Users extends Component {
   }
 
   componentDidMount(){
+      isMounted = true
       this.props.onRef(this)
       this.setDefaultKeys()
       window.addEventListener('click', (event)=> {
         this.setState({dropItem: null})
       })
+  }
+
+  componentWillUnmount = () => {
+    this.setState = () => {
+      return
+    }
   }
 
   callByOne () {

@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import styles from './Main.less';
-import baseStyles from '../assets/base.less'
-import Users from '../Users/Users'
-import Call from '../Session/Call'
-import History from '../History/History'
-import Tempgroups from '../Tempgroups/tempgroups';
+import styles from './index.less';
+import baseStyles from './assets/base.less'
+import Users from './Users/Users'
+import Call from './Session/Call'
+import History from './History/History'
+import Tempgroups from './Tempgroups/tempgroups';
 import {Icon} from 'antd';
 import {queryOnlineUsers, queryData} from './Apis/sipUsers'
 const QUERY_ONLINE_DURATION = 12000
@@ -256,15 +256,15 @@ class SipCall extends Component {
       <div 
         className={`${styles['m-call-wrap']}`}
         style={{ width, height: visible ? (height-64) : 0, bottom: visible ? 0 : (64-height)}}>
-        <Icon 
+        {visible && <Icon 
           type="close" 
           style={{fontSize: 18,position: 'absolute', right: 10, top: 5}}
           className={`${baseStyles.pointer}`}
           onClick={this.hanleClose}
-        />
+        />}
         <div
           className={`${styles.sipcall} ${baseStyles['flex']}`}
-          style={{height: `${visible ? (height-64) : 0}px`, width: `${visible ? width < 1200 ? 1280 : width : 0}px`, padding: `${visible ? '30px 20px' : 0}`, overflow: 'hidden'}}
+          style={{height: `${visible ? (height-64) : 0}px`, width: `${visible ? width < 1200 ? 1280 : width : 0}px`, padding: `${visible ? '40px 20px' : 0}`, overflow: 'hidden'}}
         >
           {visible && <Users ref="users"
                 height={height-112}

@@ -11,7 +11,7 @@ import Settings from '../Settings'
 let timer = null
 let waitingTimer = null
 
-export default class extends Component {
+export default class  Call extends Component {
 
 	constructor (props) {
 		super(props)
@@ -221,7 +221,7 @@ export default class extends Component {
 					let content = !content && Array.isArray(e.content) && e.content.length && e.content
 					if (Array.isArray(content) && content.length) {
 
-						let info = byteToString(content), infoUser
+						let info = byteToString(content), infoUser = {}
 
 						let infoArr = info.split('\r\n')
 						let cbInfo = arrToObjectBySmyble(infoArr)

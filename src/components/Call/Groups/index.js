@@ -121,7 +121,7 @@ class Groups extends Component {
   }
 
   upOnlineUsers (users) {
-    const {onlineIds, usernumber} = this.props
+    const {onlineIds=[], usernumber} = this.props
     let onlineUsers = [], offlineUsers = []
 
     users.forEach(item => {

@@ -16,7 +16,7 @@ import logo from '../assets/logo.svg';
 import Footer from './Footer';
 import Header from './Header';
 import Context from './MenuContext';
-import Call from '../components/Call/Main/Main'
+import Call from '../components/Call'
 
 const { Content } = Layout;
 const { check } = Authorized;
@@ -217,10 +217,10 @@ class BasicLayout extends React.PureComponent {
     });
   };
 
-  toggleVisible = () => {
+  openCallModal = () => {
     if (this.state.callRef) {
       this.state.callRef.setState({
-        visible: !this.state.callRef.state.visible
+        visible: true
       })
     }
   }
@@ -268,7 +268,7 @@ class BasicLayout extends React.PureComponent {
             {...this.props}
           />
           <Content style={this.getContentStyle()}>
-            <Button type="primary" onClick={this.toggleVisible}>语音通话</Button>
+            <Button type="primary" onClick={this.openCallModal}>语音通话</Button>
             <Call
               usernumber='10010022'
               pwd='228304'

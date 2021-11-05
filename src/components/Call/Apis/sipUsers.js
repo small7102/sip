@@ -1,4 +1,4 @@
-import {queryUsers, getOnlineUsers, getCallRecords} from '../../services/index'
+import {queryUsers, getOnlineUsers, getCallRecords} from '../services/index.js'
 
 function getParentIdMap (list) {
   let items = {}
