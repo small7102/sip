@@ -69,5 +69,53 @@ export function sendsFormat (seconds, type='number') {
     if(new RegExp("("+ k +")").test(fmt))
   fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
   return fmt;
-}
+ }
+
+ export function getParentIdMap (list) {
+	let items = {}
+	// 获取每个节点的直属子节点，*记住是直属，不是所有子节点
+	for (let i = 0; i < list.length; i++) {
+	  let deep = list[i].dep_level.length / 3, key
+	  key  = deep === 1 ? '0' : list[i].dep_level.substr(0, (deep-1) * 3)
+	  if (items[key]) {
+		items[key].push(list[i])
+	  } else {
+		items[key] = []
+		items[key].push(list[i])
+	  }
+	}
+	return items
+  }
+  /**
+  * 利用递归格式化每个节点
+  */
+export function formatTree (items, parentId = '0', flatMap={}) {
+	let result = []
+	if (!items[parentId]) {
+	  return {tree: result, flatMap}
+	}
+	for (let t of items[parentId]) {
+	  let value = {...t,parentId}
+	  let _result = formatTree(items, value.dep_level, flatMap)
+	  value.children = _result && _result.tree || []
+	  value.children = value.children.concat(value.users)
+	  result.push(value)
+	  flatMap[parentId] = value.children
+	}
+	return {tree: result, flatMap}
+  }
+  
+  
+  export function getMapByList (list, key='dep_uuid', pid=true) {
+	let map = {}
+	list.forEach(item => {
+	  map[item[key]] = {...item}
+	  if (pid) {
+		let deep = item.dep_level.length / 3, parentId
+		parentId  = deep === 1 ? '0' : item.dep_level.substr(0, (deep-1) * 3)
+		map[item[key]].parentId = parentId
+	  }
+	})
+	return map
+  }
 

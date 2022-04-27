@@ -112,7 +112,6 @@ export default {
         let items = getParentIdMap(_departments)
         let formatResult = formatTree(items)
 
-        console.log(formatResult.flatMap, 7777)
         yield put({
           type: 'saveDepartments',
           payload: formatResult.tree

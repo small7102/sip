@@ -20,7 +20,7 @@ class Groups extends Component {
     loading: false
   }
 
-  getGroups (roomid='') {
+  getGroups(roomid = '') {
     const {usernumber, pwd, realm, dataUrl} = this.props
     this.setState({loading: true})
     getGroups({
@@ -31,7 +31,7 @@ class Groups extends Component {
     }).then(res => {
       if (res && res.code === '1') {
         let list = res.value
-        this.setState({groupList: list, loading: false}, () => {
+        this.setState({ groupList: list,loading: false },() => {
           if (list.length) this.setState({expandedKeys: [list[list.length-1].group_uuid]})
         })
       }
@@ -177,7 +177,7 @@ class Groups extends Component {
               style={{fontSize: `16px`}}
             ></i>
             <span className={baseStyles['text-overflow']}
-             style={{width: '162px'}}>{item.group_name}</span>
+             style={{width: '200px'}}>{item.group_name}</span>
             <i title="群组通话" 
                className={`${iconfont['m-icon']} ${iconfont['icon-dianhua']} ${baseStyles['ft16']}`}
                onClick={
@@ -201,7 +201,7 @@ class Groups extends Component {
       :
       <TreeNode
         key={`${group_uuid}+${item.usr_mapnum}`}
-        className={styles['tree-child']}
+        className={`${styles['tree-child']} ${baseStyles.flex}`}
         disableCheckbox={item.usr_mapnum === usernumber}
         title ={
             <div

@@ -1,3 +1,12 @@
+/*
+ * @Author: duanguang
+ * @Date: 2022-04-26 15:25:09
+ * @LastEditTime: 2022-04-26 17:24:05
+ * @LastEditors: duanguang
+ * @Description: 
+ * @FilePath: /sip/src/pages/Call/services/index.js
+ * 「扫去窗上的尘埃，才可以看到窗外的美景。」
+ */
 import request from '../utils/request';
 import { stringify } from 'qs';
 import hex_md5 from 'js-md5';

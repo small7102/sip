@@ -25,7 +25,7 @@ export default [
           {
             path: '/sipcall/center',
             name: 'sipcall',
-            component: './Call/Main/Main.js',
+            component: './Example/Example.js',
           }
         ]
       },

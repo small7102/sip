@@ -181,7 +181,7 @@ class Users extends Component {
 
   handleMore (e, item) {
     const {clientX, clientY} = e
-    const {height} = this.props
+    const {height, onData} = this.props
 
     let top = 0, arrowUp
     if (clientY+72 > 112+height){
@@ -198,11 +198,14 @@ class Users extends Component {
       arrowUp
     })
 
-    this.state.drawerRef.initData(item.usr_number)
-  }
+	// this.state.drawerRef.initData(item.usr_number)
+}
 
-	queryVoice () {
-		this.setState({visible: true})
+	queryVoice(usr_number) {
+		const {onData} = this.props
+		console.log(onData)
+		if (typeof onData === 'function') onData(usr_number)
+		// this.setState({visible: true})
 	}
 
 	onVoiceClose = () => {
@@ -267,7 +270,9 @@ class Users extends Component {
 					<li
 						className={baseStyles['m-item']}
 						style={{border: 'none'}}
-						onClick={this.queryVoice}
+						onClick={() => {
+							this.queryVoice(dropItem.usr_number)
+						}}
 					>
             <i className={`${iconfont['m-icon']} ${iconfont['icon-lishijilu']}`}></i>
             语音记录
@@ -317,7 +322,7 @@ class Users extends Component {
 						}
 						key={item.dep_uuid}
 						dataRef={item}
-						className={styles['tree-parent']}
+						className={`${styles['tree-parent']}`}
 						checkable={!!item.children.length}
 						disableCheckbox={!item.children.length}
 					>
@@ -327,7 +332,7 @@ class Users extends Component {
       }
       return <TreeNode
 								key={item.usr_number}
-								className={styles['tree-child']}
+								className={`${styles['tree-child']} ${baseStyles.flex}`}
 								disableCheckbox={item.usr_number === usernumber}
 								title ={
 									<div
@@ -459,7 +464,7 @@ class Users extends Component {
                     </ul>
                   </Checkbox.Group>)
                   }
-                  <VoiceRecords
+                  {/* <VoiceRecords
                     visible={visible}
                     usernumber={usernumber}
                     pwd = {pwd}
@@ -470,7 +475,7 @@ class Users extends Component {
                     usersMap={usersMap}
                     onVoiceClose={this.onVoiceClose}
                     onRef={this.onRef}
-                  />
+                  /> */}
                 </div>
               
             </TabPane>
